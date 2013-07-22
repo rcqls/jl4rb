@@ -46,13 +46,13 @@ VALUE Julia_init(VALUE obj, VALUE args)
   //VERY IMPORTANT; do no use 'joinpath' since it requires libpcre which needs DL_LOAD_PATH ) 
   jl_eval_string("push!(DL_LOAD_PATH,join([ENV[\"JL4RB_HOME\"],\"lib\",\"julia\"],Base.path_separator))");
 #endif
+  jl_eval_string("Base.init_load_path()");
   jl_eval_string("Random.librandom_init()");
   jl_eval_string("Base.check_blas()");
   jl_eval_string("LinAlg.init()");
   jl_eval_string("Sys.init()");
   jl_eval_string("Base.init_sched()");
   jl_eval_string("Base.init_head_sched()");
-  jl_eval_string("Base.init_load_path()");
   return Qtrue;
 }
 

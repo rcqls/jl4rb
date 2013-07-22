@@ -6,7 +6,7 @@ PKG_NAME='jl4rb'
 PKG_VERSION='0.0.1'
 PKG_FILES=FileList[
     'Rakefile','jl4rb.gemspec',
-    'ext/jl4rb/*.h',
+    'ext/jl4rb/*.h','ext/jl4rb/*.inc',
     'ext/jl4rb/*.c',
     'ext/jl4rb/extconf.rb',
     'ext/jl4rb/MANIFEST',
