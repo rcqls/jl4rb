@@ -24,7 +24,7 @@ require 'jl4rb'			# => true
 Julia << 'LOAD_PATH'	# => [<your julia home>/local/share/julia/site/v0.2", "<your julia home>/share/julia/site/v0.2"]
 ```
 
-If the last result is unexpected, see the next section.
+If the last result is unexpected, see the Troubles section.
 
 ## Example
 ```{.ruby execute="false"}
