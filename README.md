@@ -51,11 +51,15 @@ Julia << 'colnames(iris)'
 
 2. If (like me, on MacOSX) the result of the previous test is wrong, the reason may come from the fact that in the initialization of julia libpcre is required and failed to be loaded properly. Then, set
 
-	LD_LIBRARY_PATH=<your julia home>/lib/julia
 
-If you don't want to set LD_LIBRARY_PATH, another solution is to change the base/client.jl file as follows: 
+		LD_LIBRARY_PATH=<your julia home>/lib/julia
 
-+ split init_load_path into 2 functions
+
+If you don't want to set LD_LIBRARY_PATH, alternatives solutions would be:
+
+* Solution 1:  change the base/client.jl file as follows: 
+
+split init_load_path into 2 functions
 
 ```{.julia execute="false"}
 	function init_load_path()
@@ -71,7 +75,7 @@ If you don't want to set LD_LIBRARY_PATH, another solution is to change the base
 	end
 ```
 
-+ in _start function:
+in _start function:
 
 ```{.julia execute="false"}
 	function _start()
@@ -93,3 +97,30 @@ It is then possible to initialize julia like this (done with --enable-dl-load-pa
 Once julia recompiled to provide the updated lib/julia/sys.ji, install the gem with this additional option:
 
 	[sudo] gem install [pkg/]jl4rb-???.gem -- --enable-dl-load-path
+
+* Solution 2 (maybe the best): 
+
+change the base/client.jl file as follows: 
+
+split init_load_path into 2 functions
+
+```{.julia execute="false"}
+	function init_load_path()
+		vers = "v$(VERSION.major).$(VERSION.minor)"
+		
+		global const DL_LOAD_PATH = ByteString[
+			join([JULIA_HOME,"..","lib","julia"],Base.path_separator)
+		]
+		
+		global const LOAD_PATH = ByteString[
+			abspath(JULIA_HOME,"..","local","share","julia","site",vers),
+			abspath(JULIA_HOME,"..","share","julia","site",vers)
+		]
+	end
+```
+
+Notice that abspath is not used in the definition of DL_LOAD_PATH (since libpcre is required by abspath which depends of DL_LOAD_PATH needed by dlopen). 
+Of course, DL_LOAD_PATH depends on the definition of JULIA_HOME which normally is related to 
+the location of sys.ji. In such a case, the install is done without change
+
+	[sudo] gem install [pkg/]jl4rb-???.gem
