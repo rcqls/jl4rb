@@ -13,9 +13,8 @@ First,
 
 		export JL4RB_HOME=<your julia home>
 
-or set it in your .bashrc (or equivalent). Then,
+or set it in your .bashrc (or equivalent). Then, in a irb console:
 
-		irb
 		require 'jl4rb'
 		Julia << 'LOAD_PATH'
 
@@ -23,9 +22,9 @@ or set it in your .bashrc (or equivalent). Then,
 
 1. htableh.inc in src/support directory is missing (copy it in include/julia of your julia directory) 
 
-2. If (like me, on MacOSX) the result of the previous test is not the one expected, the reason may come from the fact that in the initialization of julia libpcre is required and failed to be loaded properly. Then, set
+2. If (like me, on MacOSX) the result of the previous test is not the LOAD_PATH output expected, the reason may come from the fact that in the initialization of julia libpcre is required and failed to be loaded properly. Then, set
 
-		LD_LIBRARY_PATH=<your julia home>
+		LD_LIBRARY_PATH=<your julia home>/lib/julia
 
 If you don't want to set LD_LIBRARY_PATH, another solution is to change the base/client.jl file as follows: 
 
@@ -46,7 +45,7 @@ If you don't want to set LD_LIBRARY_PATH, another solution is to change the base
 + in _start function:
 
 		init_load_path()
-		init_dl_load_path() #to ba added!
+		init_dl_load_path() #to be added!
 
 Then, install the gem with additional option
 
