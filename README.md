@@ -15,7 +15,7 @@ Clone this git and
 
 First, in a terminal or in your .bashrc (or equivalent):
 
-	export JL4RB_HOME=<your julia home>
+	export JLAPI_HOME=<your julia home>
 
 Then, in a irb console:
 

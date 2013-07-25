@@ -11,7 +11,7 @@
 #undef T_FLOAT
 #undef NORETURN 
 #include "julia.h"
-#include "jl4rb.h"
+#include "jlapi.h"
 //#define WITH_DL_LOAD_PATH
 
 /************* Tools ********************/
@@ -35,7 +35,7 @@ void jl4rb_init(char *julia_home_dir) {
 #ifdef WITH_DL_LOAD_PATH //Obsolete soon!
   jl_eval_string("Base.init_dl_load_path()");
   //=> VERY IMPORTANT; do no use 'joinpath' since it requires libpcre which needs DL_LOAD_PATH ) 
-  jl_eval_string("push!(DL_LOAD_PATH,join([ENV[\"JL4RB_HOME\"],\"lib\",\"julia\"],Base.path_separator))");
+  jl_eval_string("push!(DL_LOAD_PATH,join([ENV[\"JLAPI_HOME\"],\"lib\",\"julia\"],Base.path_separator))");
 #endif
   jl_eval_string("Base.init_load_path()"); //Called first to fix the DL_LOAD_PATH needed to (dl)open library (libpcre for example)
 

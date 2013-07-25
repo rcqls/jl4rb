@@ -1,7 +1,7 @@
 require "mkmf"
 require 'fileutils' #if RUBY_VERSION < "1.9"
 
-$prefix=ENV["JL4RB_HOME"] || File.join(ENV["HOME"],".jl4rb/julia") || ENV["JULIA_HOME"]
+$prefix=ENV["JLAPI_HOME"] || File.join(ENV["HOME"],".jlapi/julia") || ENV["JULIA_HOME"]
 #p  $prefix
 $prefix_include=$prefix+"/include/julia"
 $prefix_lib=$prefix+"/lib/julia"

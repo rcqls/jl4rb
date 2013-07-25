@@ -1,5 +1,5 @@
-#ifndef JL4RB_H
-#define JL4RB_H
+#ifndef JLAPI_H
+#define JLAPI_H
 extern char *julia_home;
 
 //No header jlapi.h in julia => added here locally 
