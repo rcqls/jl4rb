@@ -14,70 +14,6 @@
 #include "jlapi.h"
 //#define WITH_DL_LOAD_PATH
 
-/************* Tools ********************/
-
-//-| jl4rb_init is an small adaptation of jl_init provided in jlapi.c
-//-| Main change: 
-//-| -> use of DL_LOAD_PATH (slight modification of init_load_path in client.jl)
-//-| -> redirection of STDIN, STDOUT, STDERR
-//-|    Have to solve a strange behavior: Base.reinit_stdio fail to reload STDIN, STDOUT,STDERR (=> print failed)
-
-void jl4rb_init(char *julia_home_dir) {
-  libsupport_init();
-  char *image_file = jl_locate_sysimg(julia_home_dir);
-  //printf("image-file=%s\n",image_file);
-  julia_init(image_file);
-
-  jl_set_const(jl_core_module, jl_symbol("JULIA_HOME"),
-               jl_cstr_to_string(julia_home));
-  jl_module_export(jl_core_module, jl_symbol("JULIA_HOME"));
-  
-#ifdef WITH_DL_LOAD_PATH //Obsolete soon!
-  jl_eval_string("Base.init_dl_load_path()");
-  //=> VERY IMPORTANT; do no use 'joinpath' since it requires libpcre which needs DL_LOAD_PATH ) 
-  jl_eval_string("push!(DL_LOAD_PATH,join([ENV[\"JLAPI_HOME\"],\"lib\",\"julia\"],Base.path_separator))");
-#endif
-  jl_eval_string("Base.init_load_path()"); //Called first to fix the DL_LOAD_PATH needed to (dl)open library (libpcre for example)
-
-  jl_eval_string("Base.reinit_stdio()");
-  //-| STDIN, STDOUT and STDERR not properly loaded
-  //-| I prefer redirection of STDOUT and STDERR in IOBuffer (maybe STDIN ???)
-  jl_set_global(jl_base_module,jl_symbol("STDIN"),jl_eval_string("Base.init_stdio(ccall(:jl_stdin_stream ,Ptr{Void},()),0)"));
-  jl_set_global(jl_base_module,jl_symbol("STDOUT"),jl_eval_string("IOBuffer()"));
-  jl_set_global(jl_base_module,jl_symbol("STDERR"),jl_eval_string("IOBuffer()"));
-  //-| 2 next lines fails even if no more necessary
-  // jl_set_global(jl_base_module,jl_symbol("STDOUT"),jl_eval_string("Base.init_stdio(ccall(:jl_stdout_stream,Ptr{Void},()),1)"));
-  // jl_set_global(jl_base_module,jl_symbol("STDERR"),jl_eval_string("Base.init_stdio(ccall(:jl_stderr_stream,Ptr{Void},()),2)"));
-  
-  jl_eval_string("Base.fdwatcher_reinit()");
-  jl_eval_string("Base.Random.librandom_init()");
-  jl_eval_string("Base.check_blas()");
-  jl_eval_string("LinAlg.init()");
-  jl_eval_string("Sys.init()");
-  jl_eval_string("Base.init_sched()");
-  jl_eval_string("Base.init_head_sched()"); 
-}
-
-//-| 
-
-void jl4rb_puts_stdout() {
-  jl_value_t *out;
-  char *outString;
-  
-  out=jl_eval_string("seek(STDOUT, 0);jl4rb_out = takebuf_string(STDOUT);truncate(STDOUT, 0);jl4rb_out");
-  outString=jl_bytestring_ptr(out);
-  if(strlen(outString)) printf("%s\n",outString);
-}
-
-void jl4rb_puts_stderr() {
-  jl_value_t *out;
-  char *outString;
-  
-  out=jl_eval_string("seek(STDERR, 0);jl4rb_out = takebuf_string(STDERR);truncate(STDERR, 0);jl4rb_out");
-  outString=jl_bytestring_ptr(out);
-  if(strlen(outString)) printf("%s\n",outString);
-}
-
 /************* INIT *********************/
 
 
@@ -92,7 +28,7 @@ VALUE Julia_init(VALUE obj, VALUE args)
   julia_home_dir=StringValuePtr(tmp);
   //printf("First initialization with julia_home_dir=%s\n",julia_home_dir);
   
-  jl4rb_init(julia_home_dir);
+  jlapi_init(julia_home_dir);
 
  
   return Qtrue;
@@ -200,7 +136,7 @@ VALUE jl_value_to_VALUE(jl_value_t *res) {
     return resRb;
   }
   //=> No result (command incomplete or syntax error)
-  jl4rb_puts_stderr(); //If this happens but this is really not sure!
+  jlapi_print_stderr(); //If this happens but this is really not sure!
   resRb=rb_str_new2("__incomplete");
   if(jl_exception_occurred()!=NULL) {
     rb_str_cat2(resRb, "(");
@@ -224,7 +160,7 @@ VALUE Julia_eval(VALUE obj, VALUE cmd)
   cmdString=StringValuePtr(cmd);
   res=jl_eval_string(cmdString);
   jl_set_global(jl_base_module, jl_symbol("ans"),res);
-  jl4rb_puts_stdout();
+  jlapi_print_stdout();
   return jl_value_to_VALUE(res);
 }
 
