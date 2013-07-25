@@ -25,7 +25,7 @@ module Julia
       # else
       #   output=evalLine "eval(RubySandbox,begin\n"+input+"\nend)"
       # end
-      if output == "__incomplete__"
+      if output[0...12]=="__incomplete"
         if i==s.length - 1 #last!
           res << {:in => input, :out => output} unless input.empty?
         else

@@ -41,13 +41,14 @@ void jl4rb_init(char *julia_home_dir) {
 
   jl_eval_string("Base.reinit_stdio()");
   //-| STDIN, STDOUT and STDERR not properly loaded
-  //-| I prefer redirection of STDIN, STDOUT and STDERR in IOBuffer
+  //-| I prefer redirection of STDOUT and STDERR in IOBuffer (maybe STDIN ???)
   jl_set_global(jl_base_module,jl_symbol("STDIN"),jl_eval_string("Base.init_stdio(ccall(:jl_stdin_stream ,Ptr{Void},()),0)"));
-  // jl_set_global(jl_base_module,jl_symbol("STDIN"),jl_eval_string("Base.init_stdio(ccall(:jl_stdout_stream,Ptr{Void},()),1)"));
-  // jl_set_global(jl_base_module,jl_symbol("STDIN"),jl_eval_string("Base.init_stdio(ccall(:jl_stderr_stream,Ptr{Void},()),2)"));
   jl_set_global(jl_base_module,jl_symbol("STDOUT"),jl_eval_string("IOBuffer()"));
   jl_set_global(jl_base_module,jl_symbol("STDERR"),jl_eval_string("IOBuffer()"));
-
+  //-| 2 next lines fails even if no more necessary
+  // jl_set_global(jl_base_module,jl_symbol("STDOUT"),jl_eval_string("Base.init_stdio(ccall(:jl_stdout_stream,Ptr{Void},()),1)"));
+  // jl_set_global(jl_base_module,jl_symbol("STDERR"),jl_eval_string("Base.init_stdio(ccall(:jl_stderr_stream,Ptr{Void},()),2)"));
+  
   jl_eval_string("Base.fdwatcher_reinit()");
   jl_eval_string("Base.Random.librandom_init()");
   jl_eval_string("Base.check_blas()");
@@ -200,11 +201,16 @@ VALUE jl_value_to_VALUE(jl_value_t *res) {
   }
   //=> No result (command incomplete or syntax error)
   jl4rb_puts_stderr(); //If this happens but this is really not sure!
-  resRb=rb_str_new2("__incomplete__");
+  resRb=rb_str_new2("__incomplete");
   if(jl_exception_occurred()!=NULL) {
-    printf("%s: %s\n",jl_typeof_str(jl_exception_occurred()),jl_bytestring_ptr(jl_get_field(jl_exception_occurred(),"msg")));
+    rb_str_cat2(resRb, "(");
+      rb_str_cat2(resRb,jl_typeof_str(jl_exception_occurred()));
+    jl_value_t* err=jl_get_field(jl_exception_occurred(),"msg");
+    if(err!=NULL) printf("%s: %s\n",jl_typeof_str(jl_exception_occurred()),jl_bytestring_ptr(err));
     jl_exception_clear();
+    rb_str_cat2(resRb, ")");
   }
+  rb_str_cat2(resRb, "__");
   return resRb;
 }
 
