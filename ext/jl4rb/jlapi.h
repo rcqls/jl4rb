@@ -28,30 +28,29 @@ DLLEXPORT void jl_exception_clear(void);
 void jlapi_init(char *julia_home_dir) {
   libsupport_init();
   char *image_file = jl_locate_sysimg(julia_home_dir);
-  //printf("image-file=%s\n",image_file);
+  printf("image-file=%s\n",image_file);
   julia_init(image_file);
 
   jl_set_const(jl_core_module, jl_symbol("JULIA_HOME"),
                jl_cstr_to_string(julia_home));
   jl_module_export(jl_core_module, jl_symbol("JULIA_HOME"));
   
-#ifdef WITH_DL_LOAD_PATH //Obsolete soon!
-  jl_eval_string("Base.init_dl_load_path()");
-  //=> VERY IMPORTANT; do no use 'joinpath' since it requires libpcre which needs DL_LOAD_PATH ) 
-  jl_eval_string("push!(DL_LOAD_PATH,join([ENV[\"JLAPI_HOME\"],\"lib\",\"julia\"],Base.path_separator))");
-#endif
-  jl_eval_string("Base.init_load_path()"); //Called first to fix the DL_LOAD_PATH needed to (dl)open library (libpcre for example)
-
+ 
+  //-| Called first to fix the DL_LOAD_PATH needed to (dl)open library (libpcre for example)
+  //-| Replacement of Base.init_load_path()
+  jl_set_global(jl_base_module,jl_symbol("DL_LOAD_PATH"),jl_eval_string("ByteString[join([JULIA_HOME,\"..\",\"lib\",\"julia\"],Base.path_separator)]"));
+  //-| DL_LOAD_PATH is a global constant already defined before and then not overloaded by julia
+  //-| Only LOAD_PATH would be initialized (needs libpcre because of abspath)!
+  jl_eval_string("Base.init_load_path()");
   jl_eval_string("Base.reinit_stdio()");
   //-| STDIN, STDOUT and STDERR not properly loaded
   //-| I prefer redirection of STDOUT and STDERR in IOBuffer (maybe STDIN ???)
   jl_set_global(jl_base_module,jl_symbol("STDIN"),jl_eval_string("Base.init_stdio(ccall(:jl_stdin_stream ,Ptr{Void},()),0)"));
   jl_set_global(jl_base_module,jl_symbol("STDOUT"),jl_eval_string("IOBuffer()"));
   jl_set_global(jl_base_module,jl_symbol("STDERR"),jl_eval_string("IOBuffer()"));
-  //-| 2 next lines fails even if no more necessary
+  //-| 2 next lines fails even it is if no more necessary
   // jl_set_global(jl_base_module,jl_symbol("STDOUT"),jl_eval_string("Base.init_stdio(ccall(:jl_stdout_stream,Ptr{Void},()),1)"));
   // jl_set_global(jl_base_module,jl_symbol("STDERR"),jl_eval_string("Base.init_stdio(ccall(:jl_stderr_stream,Ptr{Void},()),2)"));
-  
   jl_eval_string("Base.fdwatcher_reinit()");
   jl_eval_string("Base.Random.librandom_init()");
   jl_eval_string("Base.check_blas()");
@@ -59,6 +58,7 @@ void jlapi_init(char *julia_home_dir) {
   jl_eval_string("Sys.init()");
   jl_eval_string("Base.init_sched()");
   jl_eval_string("Base.init_head_sched()"); 
+  jl_eval_string("println(\"Julia initialized!\")");
 }
 
 //-| Get STDOUT, STDERR IOBuffer as string
