@@ -1,11 +1,14 @@
 # Julia for Ruby
 
-This is an attempt to embed the julia language in ruby. Actually, very basic julia types are converted to ruby objects.
+This is an attempt to embed the julia language in ruby. 
+Actually, very basic julia types are converted to ruby objects.
 
 
-## requirement
+## Requirement
 
-[julia-api4rcqls](https://github.com/rcqls/julia-api4rcqls): since the current project is a work in progress and very experimental, we prefer to use the julia-api4rcqls tools. Furthermore, julia-api4rcqls is used both in [jl4R](https://github.com/rcqls/jl4R) and [jl4rb](https://github.com/rcqls/jl4rb) projects.
+[julia-api4rcqls](https://github.com/rcqls/julia-api4rcqls): since the current project is a work in progress 
+and very experimental, we prefer to use the julia-api4rcqls tools. 
+More, julia-api4rcqls is used both in [jl4R](https://github.com/rcqls/jl4R) and [jl4rb](https://github.com/rcqls/jl4rb) projects.
 
 
 ## Install
@@ -28,8 +31,6 @@ Then, in a irb console:
 require 'jl4rb'			# => true
 Julia << 'LOAD_PATH'	# => [<your julia home>/local/share/julia/site/v0.2", "<your julia home>/share/julia/site/v0.2"]
 ```
-
-If the last result is unexpected, see the Troubles section.
 
 ## Example
 ```{.ruby execute="false"}
