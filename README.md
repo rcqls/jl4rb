@@ -3,6 +3,11 @@
 This is an attempt to embed the julia language in ruby. Actually, very basic julia types are converted to ruby objects.
 
 
+## requirement
+
+[julia-api4rcqls](https://github.com/rcqls/julia-api4rcqls): since the current project is a work in progress and very experimental, we prefer to use the julia-api4rcqls tools. Furthermore, julia-api4rcqls is used both in [jl4R](https://github.com/rcqls/jl4R) and [jl4rb](https://github.com/rcqls/jl4rb) projects.
+
+
 ## Install
 
 Clone this git and
@@ -47,10 +52,5 @@ Julia << 'colnames(iris)'
 
 ## Troubles
 
-1. htableh.inc in src/support directory is missing (copy it in include/julia of your julia directory). 
-*Update*: htableh.inc is now in the package (ext/jl4rb) until the julia core solve the problem.
-
-2. User linux needs to add jl_bytestring_ptr to julia.expmap to be able to compile jl4rb package. Maybe some source headers need to be copied inside the include/julia directory. 
-
-3. Notice that now there is no more issue on the setting of LD_LIBRARY_PATH since DL_LOAD_PATH is initialized when first calling Julia.init and just before the initialization of LOAD_PATH (which from time to time needs DL_LOAD_PATH already set).
+1. User linux needs to add jl_bytestring_ptr to julia.expmap to be able to compile jl4rb package. Maybe some source headers need to be copied inside the include/julia directory. 
 
