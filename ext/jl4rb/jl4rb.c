@@ -11,8 +11,7 @@
 #undef T_FLOAT
 #undef NORETURN 
 #include "julia.h"
-#include "jlapi.h"
-//#define WITH_DL_LOAD_PATH
+#include "julia-api.h"
 
 /************* INIT *********************/
 

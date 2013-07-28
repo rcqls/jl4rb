@@ -10,7 +10,7 @@ def jl4rb_makefile(inc,lib)
     #$CFLAGS = "-I"+inc+" -I."
     $CFLAGS = (enable_config("dl-load-path") ? "-DWITH_DL_LOAD_PATH " : "")+ "-I"+inc+" -I."
     $LDFLAGS = " -Wl,-rpath,"+lib+" -L"+lib if lib
-    $libs = " -ljulia-release"
+    $libs = " -ljulia-api"
  
     header = nil
 
