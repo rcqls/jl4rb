@@ -18,16 +18,18 @@
 
 VALUE Julia_init(VALUE obj, VALUE args)
 {
-  char **argv,*julia_home_dir;
+  char **argv,*julia_home_dir,*mode;
   int i,argc;
   VALUE tmp;
 
   argc=RARRAY_LEN(args) + 1;
   tmp=rb_ary_entry(args,0);
   julia_home_dir=StringValuePtr(tmp);
+  tmp=rb_ary_entry(args,1);
+  mode=StringValuePtr(tmp);
   //printf("First initialization with julia_home_dir=%s\n",julia_home_dir);
   
-  jlapi_init(julia_home_dir);
+  jlapi_init(julia_home_dir,mode);
 
  
   return Qtrue;
