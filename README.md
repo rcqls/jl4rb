@@ -54,4 +54,5 @@ Julia << 'colnames(iris)'
 ## Troubles
 
 1. User linux needs to add jl_bytestring_ptr to julia.expmap to be able to compile jl4rb package. Maybe some source headers need to be copied inside the include/julia directory. 
+1. Now tested on Windows thanks to the [julia-api4rcqls](https://github.com/rcqls/julia-api4rcqls) project extended for Windows.
 
