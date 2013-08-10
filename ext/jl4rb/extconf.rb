@@ -8,9 +8,9 @@ $prefix_lib=$prefix+"/lib/julia"
 
 def jl4rb_makefile(inc,lib) 
     #$CFLAGS = "-I"+inc+" -I."
-    $CFLAGS = (enable_config("dl-load-path") ? "-DWITH_DL_LOAD_PATH " : "")+ "-I"+inc+" -I."
+    $CFLAGS = (enable_config("julia-release") ? "-DWITH_JULIA_RELEASE " : "")+ "-I"+inc+" -I."
     $LDFLAGS = " -Wl,-rpath,"+lib+" -L"+lib if lib
-    $libs = " -ljulia-api"
+    $libs = (enable_config("julia-release") ? " -ljulia-release" : " -ljulia-api" )
  
     header = nil
 

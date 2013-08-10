@@ -5,14 +5,12 @@
 **********************************************************************/
 #include <stdio.h>
 #include <string.h>
-
-#include "ruby.h"
+ 
+#include "julia-api.h"
 //-| next macros already exist in ruby and are undefined here
 #undef T_FLOAT
-#undef NORETURN 
-#include "julia.h"
-#include "julia-api.h"
-
+#undef NORETURN
+#include "ruby.h"
 /************* INIT *********************/
 
 
@@ -28,9 +26,12 @@ VALUE Julia_init(VALUE obj, VALUE args)
   tmp=rb_ary_entry(args,1);
   mode=StringValuePtr(tmp);
   //printf("First initialization with julia_home_dir=%s\n",julia_home_dir);
-  
-  jlapi_init(julia_home_dir,mode);
 
+#ifdef WITH_JULIA_RELEASE
+  jl_init(julia_home_dir);
+#else 
+  jlapi_init(julia_home_dir,mode);
+#endif
  
   return Qtrue;
 }
@@ -137,7 +138,9 @@ VALUE jl_value_to_VALUE(jl_value_t *res) {
     return resRb;
   }
   //=> No result (command incomplete or syntax error)
+#ifndef WITH_JULIA_RELEASE
   jlapi_print_stderr(); //If this happens but this is really not sure!
+#endif
   resRb=rb_str_new2("__incomplete");
   if(jl_exception_occurred()!=NULL) {
     rb_str_cat2(resRb, "(");
@@ -161,7 +164,9 @@ VALUE Julia_eval(VALUE obj, VALUE cmd)
   cmdString=StringValuePtr(cmd);
   res=jl_eval_string(cmdString);
   jl_set_global(jl_base_module, jl_symbol("ans"),res);
+#ifndef WITH_JULIA_RELEASE
   jlapi_print_stdout();
+#endif
   return jl_value_to_VALUE(res);
 }
 
