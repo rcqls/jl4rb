@@ -1,30 +1,17 @@
 ## Module Julia
 
 module Julia
+  # Careful!, Julia.exec code, :get => nil does not fetch stdout
   def Julia.eval(s,opts={})
-    opts={:show=>nil,:simplify=>true,:init=>true,:safe=>true}.merge(opts)
+    opts={:print=>true,:show=>nil,:simplify=>true,:init=>true,:safe=>true}.merge(opts)
     #p opts
     Julia.init if opts[:init] #just in case
     res=[]
-    # if opts[:safe]
-    #   evalLine <<-JLEND
-    #     module RubySandbox
-    #       # Replace OUTPUT_STREAM references so we can capture output.
-    #       OUTPUT_STREAM = IOBuffer()
-    #       print(x) = Base.print(OUTPUT_STREAM, x)
-    #       println(x) = Base.println(OUTPUT_STREAM, x)
-    #     end
-    #   JLEND
-    # end
     input,output="",""
     s=[s] unless s.is_a? Array
-    s.each_with_index do |line,i|
-      input << line
-      # if !opts[:safe] || input[0...6]=="using "
-        output=evalLine input
-      # else
-      #   output=evalLine "eval(RubySandbox,begin\n"+input+"\nend)"
-      # end
+    s.each_with_index do |line,i| #line here is a command!
+      input << line        
+      output=evalLine input, opts[:print]
       if output.is_a? String and output[0...12]=="__incomplete"
         if i==s.length - 1 #last!
           res << {:in => input, :out => output} unless input.empty?
@@ -38,7 +25,7 @@ module Julia
     end
     if opts[:show]
       res.each do |cmd|
-        print"in > ";puts cmd[:in]
+        print "in > ";puts cmd[:in]
         begin print "out> ";puts cmd[:out];end unless  cmd[:out]=="__incomplete__"
       end
     else
@@ -47,9 +34,34 @@ module Julia
     end
   end
 
+  # Careful!, Julia.exec code, :get => nil does not fetch stdout
+  def Julia.exec(code,opts={})
+    opts={:get=>true}.merge(opts)
+    execLine code, opts[:get]
+  end
+
+  def Julia.<(s)
+    Julia.exec(s)
+  end
+
   def Julia.<<(s)
     Julia.eval(s)
   end
 
+end
+
+module JL
+  def JL.<<(s)
+    Julia << s
+  end
+end
+
+class String
+
+  def jl4rb
+    Julia << self
+  end
+
+  alias to_jl jl4rb
 end
  

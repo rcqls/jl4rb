@@ -127,6 +127,17 @@ VALUE jl_value_to_VALUE(jl_value_t *res) {
       //TODO: multidim array ruby equivalent???? Is it necessary 
       
     }
+    else
+    if(strcmp(jl_typeof_str(res),"Tuple")==0 )
+    //if(jl_is_array(res))
+    {
+      d=jl_tuple_len(res);
+      resRb = rb_ary_new2(d);
+      for(i=0;i<d;i++) {
+        rb_ary_store(resRb,i,jl_value_to_VALUE(jl_tupleref(res,i)));
+      }
+      return resRb;
+    }
     resRb=rb_str_new2("__unconverted(");
     rb_str_cat2(resRb, jl_typeof_str(res));
     rb_str_cat2(resRb, ")__\n");
@@ -156,18 +167,38 @@ VALUE jl_value_to_VALUE(jl_value_t *res) {
 
 /***************** EVAL **********************/
 
-VALUE Julia_eval(VALUE obj, VALUE cmd)
+VALUE Julia_eval(VALUE obj, VALUE cmd, VALUE print_stdout)
+{
+  char *cmdString;
+  jl_value_t *res;
+   
+  cmdString=StringValuePtr(cmd);
+#ifndef WITH_JULIA_RELEASE
+  //This flush redirected stdout before printing
+  if(print_stdout!=Qnil) jlapi_get_stdout();
+#endif
+  res=jl_eval_string(cmdString);
+  jl_set_global(jl_base_module, jl_symbol("ans"),res);
+#ifndef WITH_JULIA_RELEASE
+  if(print_stdout!=Qnil) jlapi_print_stdout();
+#endif
+  return jl_value_to_VALUE(res);
+}
+
+VALUE Julia_exec(VALUE obj, VALUE cmd, VALUE get_stdout)
 {
   char *cmdString,*outString;
-  jl_value_t *res,*out;
+  jl_value_t *res;
+  VALUE out;
    
   cmdString=StringValuePtr(cmd);
   res=jl_eval_string(cmdString);
   jl_set_global(jl_base_module, jl_symbol("ans"),res);
-#ifndef WITH_JULIA_RELEASE
-  jlapi_print_stdout();
-#endif
-  return jl_value_to_VALUE(res);
+  if(get_stdout!=Qnil) {
+    outString=jlapi_get_stdout();
+    jl_set_global(jl_base_module, jl_symbol("rbout"),jl_cstr_to_string(outString));
+    return  rb_str_new2(outString);
+  } else return Qnil;
 }
 
 void
@@ -179,6 +210,8 @@ Init_jl4rb()
 
   rb_define_module_function(mJulia, "initJL", Julia_init, 1);
 
-  rb_define_module_function(mJulia, "evalLine", Julia_eval, 1);
+  rb_define_module_function(mJulia, "evalLine", Julia_eval, 2);
+
+  rb_define_module_function(mJulia, "execLine", Julia_exec, 2);
 
 }
