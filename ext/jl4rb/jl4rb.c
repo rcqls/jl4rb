@@ -11,6 +11,9 @@
 #undef T_FLOAT
 #undef NORETURN
 #include "ruby.h"
+
+#define length(a) jl_array_size(a,0)
+
 /************* INIT *********************/
 
 
@@ -71,14 +74,12 @@ VALUE jl_value_to_VALUE(jl_value_t *res) {
       return (jl_unbox_bool(res) ? Qtrue : Qfalse);
     }
     else 
-    if(strcmp(jl_typeof_str(res),"DataType")==0)
-    //if(jl_is_bool(res)) 
+    if(strcmp(jl_typeof_str(res),"DataType")==0) 
     {
       return rb_str_new2(jl_typename_str(res));
     }
     else 
     if(strcmp(jl_typeof_str(res),"Nothing")==0)
-    //if(jl_is_bool(res)) 
     {
       return Qnil;
     }
@@ -201,6 +202,247 @@ VALUE Julia_exec(VALUE obj, VALUE cmd, VALUE get_stdout)
   } else return Qnil;
 }
 
+
+/// Util
+
+int util_isVector(jl_value_t *ans)
+{
+  return (strcmp(jl_typeof_str(ans),"Array")==0) && (jl_array_rank(ans)==1);
+}
+
+int util_isVariable(VALUE self)
+{
+  VALUE tmp;
+  tmp=rb_iv_get(self,"@type");
+  return strcmp(StringValuePtr(tmp),"var")==0;
+}
+
+jl_value_t *util_getVar(VALUE self)
+{
+  jl_value_t *ans;
+  char *name;
+  VALUE tmp;
+
+  tmp=rb_iv_get(self,"@name");
+  name=StringValuePtr(tmp);
+  ans=jl_eval_string(name);
+  //printf("name=%s,vector=%d\n",name,util_isVector(ans));
+  if(!util_isVector(ans)) return NULL;
+  return ans;
+}
+
+//with argument!! necessarily an expression and not a variable
+jl_value_t *util_getExpr_with_arg(VALUE self)
+{
+  jl_value_t *ans;
+  VALUE tmp;
+  char *cmd;
+
+  //printf("getVar:%s\n",name);
+  tmp=rb_str_dup(rb_iv_get(self,"@arg"));
+  tmp=rb_str_cat2(rb_str_dup(rb_iv_get(self,"@name")),StringValuePtr(tmp));
+  cmd=StringValuePtr(tmp);
+  ans=jl_eval_string(cmd);
+  if(ans==NULL) return ans;
+  if(!util_isVector(ans)) return NULL;
+  return ans;
+}
+
+
+VALUE util_jl_value_to_VALUE(jl_value_t *ans)
+{   
+  return jl_value_to_VALUE(ans);
+}
+
+
+
+jl_value_t* util_VALUE_to_jl_value(VALUE arr)
+{
+  jl_value_t *ans,*elt;
+  VALUE res,class,tmp;
+  int i,n=0;
+
+  if(!rb_obj_is_kind_of(arr,rb_cArray)) {
+    n=1;
+    res = rb_ary_new2(1);
+    rb_ary_push(res,arr);
+    arr=res;
+  } else {
+    n=RARRAY_LEN(arr);
+  }  
+
+  class=rb_class_of(rb_ary_entry(arr,0));
+  ans=jl_alloc_cell_1d(n);
+  if(class==rb_cFloat) {
+    //ans=jl_alloc_array_1d(jl_float64_type,n);
+    for(i=0;i<n;i++) {
+      elt=jl_box_float64(NUM2DBL(rb_ary_entry(arr,i)));
+      jl_arrayset(ans,elt,i);
+    }
+  } else if(class==rb_cFixnum || class==rb_cBignum) {
+    //ans=jl_alloc_array_1d(jl_long_type,n);  
+    for(i=0;i<n;i++) {
+      elt=jl_box_long(NUM2INT(rb_ary_entry(arr,i)));
+      jl_arrayset(ans,elt,i);
+    }
+  } else if(class==rb_cTrueClass || class==rb_cFalseClass) {
+    //ans=jl_alloc_array_1d(jl_bool_type,n);
+    for(i=0;i<n;i++) {
+      elt=jl_box_bool(rb_class_of(rb_ary_entry(arr,i))==rb_cFalseClass ? 0 : 1);
+      
+    }
+  } else if(class==rb_cString) {
+    //ans=jl_alloc_array_1d(jl_utf8_string_type,n);
+    for(i=0;i<n;i++) {
+      tmp=rb_ary_entry(arr,i);
+      elt=jl_cstr_to_string(mkChar(StringValuePtr(tmp)));
+      jl_arrayset(ans,elt,i);
+    }
+  } else ans=NULL;
+
+  return ans; 
+}
+
+VALUE JuliaVect_initialize(VALUE self, VALUE name)
+{
+  rb_iv_set(self,"@name",name);
+  rb_iv_set(self,"@type",rb_str_new2("var"));
+  rb_iv_set(self,"@arg",rb_str_new2(""));
+  return self;
+}
+
+VALUE JuliaVect_isValid(VALUE self)
+{
+  jl_value_t* ans;
+  char *name;
+
+  ans = util_getVar(self);
+
+  if(!util_isVector(ans)) {
+    VALUE tmp;
+    tmp=rb_iv_get(self,"@name");
+    name = StringValuePtr(tmp);
+    rb_warn("%s is not a R vector !!!",name);
+    return Qfalse;
+  }
+  return Qtrue;
+}
+
+VALUE JuliaVect_length(VALUE self)
+{
+  jl_value_t* ans;
+  char *name;
+ 
+  ans = util_getVar(self);
+
+  if(ans==NULL) {
+    //printf("Sortie de length avec nil\n");
+    return Qnil;
+  }
+
+  return INT2NUM(length(ans));
+}
+
+VALUE JuliaVect_get(VALUE self)
+{
+  jl_value_t* ans;
+  VALUE res;
+  char *name;
+  int n,i;
+  VALUE res2; 
+  
+  ans = util_getVar(self);
+
+  if(ans==NULL) {
+    //printf("Sortie de get avec nil\n");
+    return Qnil;
+  }
+
+  res=util_jl_value_to_VALUE(ans);
+  if(length(ans)==1) res=rb_ary_entry(res,0);
+  return res; 
+}
+
+VALUE JuliaVect_get_with_arg(VALUE self)
+{
+  jl_value_t* ans;
+  VALUE res;
+  char *name;
+  int n,i;
+  VALUE res2; 
+
+  ans = util_getExpr_with_arg(self);
+ 
+  if(ans==NULL) {
+    //printf("Sortie de get avec nil\n");
+    return Qnil;
+  }
+  res=util_jl_value_to_VALUE(ans);
+ 
+//printf("JuliaVect_get_with_arg: length(ans)=%d\n",length(ans));
+ if (length(ans)==1) res=rb_ary_entry(res,0);
+
+  return res;
+}
+
+
+
+// faster than self.to_a[index]
+VALUE JuliaVect_aref(VALUE self, VALUE index)
+{
+  jl_value_t* ans;
+  VALUE res;
+  int n,i;
+  i = FIX2INT(index);
+  
+  ans = util_getVar(self);
+  n=length(ans);
+  printf("i=%d and n=%d\n",i,n);
+  if(i<n) {
+     res=jl_value_to_VALUE(jl_arrayref((jl_array_t *)ans,i));
+  } else {
+    res = Qnil;
+  }
+  return res;
+}
+
+VALUE JuliaVect_set(VALUE self,VALUE arr)
+{
+  jl_value_t* ans;
+  char *name;
+  VALUE tmp;
+
+  ans=util_VALUE_to_jl_value(arr);
+  
+  tmp=rb_iv_get(self,"@name");
+  name = StringValuePtr(tmp);
+  jl_set_global(jl_main_module, jl_symbol(name),ans);
+
+  return self; 
+}
+
+VALUE JuliaVect_assign(VALUE obj, VALUE name,VALUE arr)
+{
+  jl_value_t* ans;
+  char *tmp;
+
+  ans=util_VALUE_to_jl_value(arr);
+
+  tmp = StringValuePtr(name);
+  jl_set_global(jl_main_module, jl_symbol(tmp),ans);
+
+  return Qnil; 
+}
+
+VALUE JuliaVect_set_with_arg(VALUE self,VALUE arr)
+{
+  // VALUE tmp;
+  // defineVar(install(".rubyExport"),util_VALUE2jl_value_t*(arr),R_GlobalEnv);
+  // tmp=rb_iv_get(self,"@arg"); 
+  // util_eval1string(rb_str_cat2(rb_str_cat2(rb_str_dup(rb_iv_get(self,"@name")),StringValuePtr(tmp)),"<-.rubyExport"));
+  return self;
+}
+
 void
 Init_jl4rb()
 {
@@ -213,5 +455,34 @@ Init_jl4rb()
   rb_define_module_function(mJulia, "evalLine", Julia_eval, 2);
 
   rb_define_module_function(mJulia, "execLine", Julia_exec, 2);
+
+  VALUE cJuliaVect;
+
+  cJuliaVect = rb_define_class_under(mJulia,"Vector",rb_cObject);
+
+  rb_define_module_function(cJuliaVect, "assign", JuliaVect_assign, 2);
+
+  rb_define_method(cJuliaVect,"initialize",JuliaVect_initialize,1);
+
+  rb_define_method(cJuliaVect,"get",JuliaVect_get,0);
+  rb_define_alias(cJuliaVect,"to_a","get");
+  rb_define_alias(cJuliaVect,"value","get");
+
+  rb_define_method(cJuliaVect,"set",JuliaVect_set,1);
+  rb_define_alias(cJuliaVect,"<","set");
+  rb_define_alias(cJuliaVect,"value=","set");
+
+  //method "arg=" defined in eval.rb!! @arg initialized in method "initialize"
+  rb_define_method(cJuliaVect,"get_with_arg",JuliaVect_get_with_arg,0);
+  rb_define_alias(cJuliaVect,"value_with_arg","get_with_arg");
+  rb_define_method(cJuliaVect,"set_with_arg",JuliaVect_set_with_arg,1);
+  rb_define_alias(cJuliaVect,"value_with_arg=","set_with_arg");
+
+  rb_define_method(cJuliaVect,"valid?",JuliaVect_isValid,0);
+  rb_define_method(cJuliaVect,"length",JuliaVect_length,0);
+  rb_define_method(cJuliaVect,"[]",JuliaVect_aref,1);
+  
+  rb_define_attr(cJuliaVect,"name",1,1);
+  rb_define_attr(cJuliaVect,"type",1,1);
 
 }

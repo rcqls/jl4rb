@@ -48,6 +48,55 @@ module Julia
     Julia.eval(s)
   end
 
+  class Vector
+
+    def <<(name)
+      if name.is_a? Symbol
+        @name=name.to_s
+        @type="var"
+      else
+        @name=name
+        @type="expr"
+      end
+      return self
+    end
+
+    def arg=(arg)
+      @arg=arg
+    end
+
+    #this method is the same as the previous one but return self! Let us notice that even by adding return self in the previous one
+    # I could not manage to execute (rvect.arg="[2]").value_with_arg but fortunately rvect.set_arg("[2]").value_with_arg is working!
+    def set_arg(arg)
+      @arg=arg
+      return self
+    end
+   
+    def >(arr)
+      res=self.get
+#puts "res";p @name;p res
+      if res
+#puts "arr.class:";p arr.class
+#puts "res.class";p res.class
+        res=[res] unless res.is_a? Array
+        arr.replace(res)
+      else
+        arr.clear
+      end
+      return self
+    end
+
+=begin #Done directly inside R4rb.c
+    def value_with_arg(arg)
+      old_name,old_type=@name.dup,@type.dup
+      @name,@type=@name+arg,"expr"
+      value
+      @name,@type=old_name,old_type
+    end
+=end
+
+  end
+
 end
 
 module JL
@@ -55,6 +104,8 @@ module JL
     Julia << s
   end
 end
+
+
 
 class String
 
