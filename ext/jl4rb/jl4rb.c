@@ -244,7 +244,7 @@ jl_value_t *util_getExpr_with_arg(VALUE self)
   cmd=StringValuePtr(tmp);
   ans=jl_eval_string(cmd);
   if(ans==NULL) return ans;
-  if(!util_isVector(ans)) return NULL;
+  //if(!util_isVector(ans)) return NULL;
   return ans;
 }
 
@@ -255,18 +255,20 @@ VALUE util_jl_value_to_VALUE(jl_value_t *ans)
 }
 
 
-
+//-| Transform only a Vector or Atom 
+//-| Todo: when not a vector, avoid transform to vector first. 
 jl_value_t* util_VALUE_to_jl_value(VALUE arr)
 {
   jl_value_t *ans,*elt;
   VALUE res,class,tmp;
-  int i,n=0;
+  int i,n=0,vect=1;
 
   if(!rb_obj_is_kind_of(arr,rb_cArray)) {
     n=1;
     res = rb_ary_new2(1);
     rb_ary_push(res,arr);
     arr=res;
+    vect=0;
   } else {
     n=RARRAY_LEN(arr);
   }  
@@ -274,9 +276,10 @@ jl_value_t* util_VALUE_to_jl_value(VALUE arr)
   class=rb_class_of(rb_ary_entry(arr,0));
   ans=jl_alloc_cell_1d(n);
   if(class==rb_cFloat) {
+    //-| This is maybe faster and can be developped in julia-api as jl_vector_float64(n) for example.
     //ans=jl_alloc_array_1d(jl_float64_type,n);
     for(i=0;i<n;i++) {
-      elt=jl_box_float64(NUM2DBL(rb_ary_entry(arr,i)));
+      elt=jlapi_box_float64(NUM2DBL(rb_ary_entry(arr,i)));
       jl_arrayset(ans,elt,i);
     }
   } else if(class==rb_cFixnum || class==rb_cBignum) {
@@ -288,7 +291,7 @@ jl_value_t* util_VALUE_to_jl_value(VALUE arr)
   } else if(class==rb_cTrueClass || class==rb_cFalseClass) {
     //ans=jl_alloc_array_1d(jl_bool_type,n);
     for(i=0;i<n;i++) {
-      elt=jl_box_bool(rb_class_of(rb_ary_entry(arr,i))==rb_cFalseClass ? 0 : 1);
+      elt=jlapi_box_bool(rb_class_of(rb_ary_entry(arr,i))==rb_cFalseClass ? 0 : 1);
       
     }
   } else if(class==rb_cString) {
@@ -299,7 +302,7 @@ jl_value_t* util_VALUE_to_jl_value(VALUE arr)
       jl_arrayset(ans,elt,i);
     }
   } else ans=NULL;
-
+  if(!vect && ans) ans=jl_arrayref(ans,0);
   return ans; 
 }
 
@@ -388,23 +391,23 @@ VALUE JuliaVect_get_with_arg(VALUE self)
 
 
 // faster than self.to_a[index]
-VALUE JuliaVect_aref(VALUE self, VALUE index)
-{
-  jl_value_t* ans;
-  VALUE res;
-  int n,i;
-  i = FIX2INT(index);
+// VALUE JuliaVect_aref(VALUE self, VALUE index)
+// {
+//   jl_value_t* ans;
+//   VALUE res;
+//   int n,i;
+//   i = FIX2INT(index);
   
-  ans = util_getVar(self);
-  n=length(ans);
-  printf("i=%d and n=%d\n",i,n);
-  if(i<n) {
-     res=jl_value_to_VALUE(jl_arrayref((jl_array_t *)ans,i));
-  } else {
-    res = Qnil;
-  }
-  return res;
-}
+//   ans = util_getVar(self);
+//   n=length(ans);
+//   printf("i=%d and n=%d\n",i,n);
+//   if(i<n) {
+//      res=jl_value_to_VALUE(jl_arrayref((jl_array_t *)ans,i));
+//   } else {
+//     res = Qnil;
+//   }
+//   return res;
+// }
 
 VALUE JuliaVect_set(VALUE self,VALUE arr)
 {
@@ -436,10 +439,17 @@ VALUE JuliaVect_assign(VALUE obj, VALUE name,VALUE arr)
 
 VALUE JuliaVect_set_with_arg(VALUE self,VALUE arr)
 {
-  // VALUE tmp;
+  VALUE tmp;
+  char *cmd;
   // defineVar(install(".rubyExport"),util_VALUE2jl_value_t*(arr),R_GlobalEnv);
   // tmp=rb_iv_get(self,"@arg"); 
   // util_eval1string(rb_str_cat2(rb_str_cat2(rb_str_dup(rb_iv_get(self,"@name")),StringValuePtr(tmp)),"<-.rubyExport"));
+  jl_set_global(jl_main_module, jl_symbol("_ruby_export_"),util_VALUE_to_jl_value(arr));
+  tmp=rb_str_dup(rb_iv_get(self,"@arg"));
+  tmp=rb_str_cat2(rb_str_dup(rb_iv_get(self,"@name")),StringValuePtr(tmp));
+  tmp=rb_str_cat2(tmp,"=_ruby_export_");
+  cmd=StringValuePtr(tmp);
+  jl_eval_string(cmd);
   return self;
 }
 
@@ -480,7 +490,7 @@ Init_jl4rb()
 
   rb_define_method(cJuliaVect,"valid?",JuliaVect_isValid,0);
   rb_define_method(cJuliaVect,"length",JuliaVect_length,0);
-  rb_define_method(cJuliaVect,"[]",JuliaVect_aref,1);
+  //rb_define_method(cJuliaVect,"[]",JuliaVect_aref,1);
   
   rb_define_attr(cJuliaVect,"name",1,1);
   rb_define_attr(cJuliaVect,"type",1,1);

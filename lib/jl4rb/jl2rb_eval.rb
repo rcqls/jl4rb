@@ -71,6 +71,16 @@ module Julia
       @arg=arg
       return self
     end
+
+    def [](key)
+      set_arg("["+(key+1).to_s+"]")
+      get_with_arg
+    end
+
+    def []=(key,val)
+      set_arg("["+(key+1).to_s+"]")
+      set_with_arg(val)
+    end
    
     def >(arr)
       res=self.get
