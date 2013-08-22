@@ -409,19 +409,34 @@ VALUE JuliaVect_get_with_arg(VALUE self)
 //   return res;
 // }
 
+// VALUE JuliaVect_set(VALUE self,VALUE arr)
+// {
+//   jl_value_t* ans;
+//   char *name;
+//   VALUE tmp;
+
+//   ans=util_VALUE_to_jl_value(arr);
+  
+//   tmp=rb_iv_get(self,"@name");
+//   name = StringValuePtr(tmp);
+//   jl_set_global(jl_main_module, jl_symbol(name),ans);
+
+//   return self; 
+// }
+
 VALUE JuliaVect_set(VALUE self,VALUE arr)
 {
-  jl_value_t* ans;
-  char *name;
   VALUE tmp;
-
-  ans=util_VALUE_to_jl_value(arr);
-  
-  tmp=rb_iv_get(self,"@name");
-  name = StringValuePtr(tmp);
-  jl_set_global(jl_main_module, jl_symbol(name),ans);
-
-  return self; 
+  char *cmd;
+  // defineVar(install(".rubyExport"),util_VALUE2jl_value_t*(arr),R_GlobalEnv);
+  // tmp=rb_iv_get(self,"@arg"); 
+  // util_eval1string(rb_str_cat2(rb_str_cat2(rb_str_dup(rb_iv_get(self,"@name")),StringValuePtr(tmp)),"<-.rubyExport"));
+  jl_set_global(jl_main_module, jl_symbol("_ruby_export_"),util_VALUE_to_jl_value(arr));
+  tmp=rb_str_dup(rb_iv_get(self,"@name"));
+  tmp=rb_str_cat2(tmp,"=_ruby_export_");
+  cmd=StringValuePtr(tmp);
+  jl_eval_string(cmd);
+  return self;
 }
 
 VALUE JuliaVect_assign(VALUE obj, VALUE name,VALUE arr)
