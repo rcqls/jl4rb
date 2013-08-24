@@ -1,51 +1,12 @@
-require 'jl4rb'
-require 'R4rb'
+require File.expand_path("~/Github/dyndoc/lib/dyndoc/common/dynArray")
 
-module Dyndoc
-	
-	class Array < Array
+Array.initR
+Julia.init
 
-		attr_accessor :jl, :r
-		def initialize
-			Array.initR
-			Julia.init
-			super
-			@jl=Julia::Vector.new ids(:jl)
-			@r=R4rb::RVector.new ids(:r)
-		end
+a=[] < 'jl:[2*i for i=1:4]'
 
-		def ids(lang)
-			case lang  
-			when :jl
-				"_dynStack_"+self.object_id.abs.to_s
-			when :r
-				".dynStack."+self.object_id.abs.to_s
-			end
-		end
+p a
 
-		# when modified from ruby, other languages are updated
-		def []=(key,val)
-			super
-			@jl < self
-			@r < self
-			self
-		end
+a > 'R:b'
 
-		def [](key)
-			if self!=@jl.value
-			@jl > self
-			@r < self
-			super
-		end
-
-		def replace(ary)
-			super(ary)
-			@jl < self
-			@r < self
-			self
-		end
-
-
-	end
-
-end 
+R4rb << 'print(b)' 
