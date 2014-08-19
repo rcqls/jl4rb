@@ -41,3 +41,8 @@ p a
 Julia << 'map(string,names(iris))'
 ``` 
 
+## Remark
+
+Maybe, this (or something similar) needs to be added in your .bash_profile for Mac users:
+
+	export DYLD_FALLBACK_LIBRARY_PATH=$JULIA_DIR/lib/julia:/usr/lib
