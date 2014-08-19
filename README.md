@@ -19,7 +19,7 @@ Then, in a irb console:
 
 ```{.ruby execute="false"}
 require 'jl4rb'			# => true
-Julia << 'LOAD_PATH'	# => [<your julia home>/local/share/julia/site/v0.2", "<your julia home>/share/julia/site/v0.3"]
+Julia << 'LOAD_PATH'	# => [<your julia home>/local/share/julia/site/v0.3", "<your julia home>/share/julia/site/v0.3"]
 ```
 
 ## Example
@@ -38,6 +38,6 @@ JLEND
 p a
 
 # another call
-Julia << 'colnames(iris)'
+Julia << 'map(string,names(iris))'
 ``` 
 
