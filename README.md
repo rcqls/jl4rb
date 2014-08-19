@@ -7,7 +7,7 @@ Actually, very basic julia types are converted to ruby objects.
 
 Clone this git and
 
-	export JLAPI_HOME=<your julia home> # or put it in your .bashrc (or equivalent)
+	export JULIA_DIR=<your julia directory> # or put it in your .bashrc (or equivalent)
 
 	rake package
 	[sudo] gem install pkg/jl4rb-???.gem
