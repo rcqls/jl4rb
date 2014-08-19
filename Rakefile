@@ -8,6 +8,8 @@ PKG_FILES=FileList[
     'Rakefile','jl4rb.gemspec',
     'ext/jl4rb/*.c',
     'ext/jl4rb/extconf.rb',
+    'ext/jl4rb/*.inc',
+    'ext/jl4rb/*.h',
     'ext/jl4rb/MANIFEST',
     'lib/**/*.rb', 
     'test/**/*.rb'
@@ -37,12 +39,20 @@ opt={};ARGV.select{|e| e=~/\=/ }.each{|e| tmp= e.split("=");opt[tmp[0]]=tmp[1]}
 
 ## rake ... pkgdir=<path to provide> to update PKGDIR
 PKGDIR=opt["pkgdir"] || ENV["RUBYGEMS_PKGDIR"]  || "pkg"
-## gem task!!!
+## OLD: gem task!!!
+# desc "Create #{PKG_NAME+'-'+PKG_VERSION+'.gem'}" 
+# Gem::PackageTask.new(spec) do |pkg|
+#   pkg.package_dir=PKGDIR
+#   pkg.need_zip = false
+#   pkg.need_tar = false
+# end
+
+# New: it is less verbose than the previous one
 desc "Create #{PKG_NAME+'-'+PKG_VERSION+'.gem'}" 
-Gem::PackageTask.new(spec) do |pkg|
-  pkg.package_dir=PKGDIR
-  pkg.need_zip = false
-  pkg.need_tar = false
+task :package do |t|
+  #Gem::Builder.new(spec_client).build
+  Gem::Package.build(spec)
+  `mv #{PKG_NAME+'-'+PKG_VERSION+'.gem'} #{PKGDIR}`
 end
 
 ## clean task

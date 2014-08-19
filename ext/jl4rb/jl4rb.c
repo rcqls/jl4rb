@@ -3,13 +3,22 @@
   jl4rb.c
 
 **********************************************************************/
+ 
+#include "julia.h"
 #include <stdio.h>
 #include <string.h>
- 
-#include "julia-api.h"
+#include <math.h>
+
+//#define WITH_JULIA_RELEASE
+
+//#ifdef WITH_JULIA_RELEASE
+//#else 
+//#include "julia-api.h"
+//#endif
+
 //-| next macros already exist in ruby and are undefined here
-#undef T_FLOAT
-#undef NORETURN
+//#undef T_FLOAT
+//#undef NORETURN
 #include "ruby.h"
 
 #define length(a) jl_array_size(a,0)
@@ -19,22 +28,37 @@
 
 VALUE Julia_init(VALUE obj, VALUE args)
 {
-  char **argv,*julia_home_dir,*mode;
+  char **argv,*julia_home_dir;
   int i,argc;
   VALUE tmp;
 
   argc=RARRAY_LEN(args) + 1;
   tmp=rb_ary_entry(args,0);
   julia_home_dir=StringValuePtr(tmp);
-  tmp=rb_ary_entry(args,1);
-  mode=StringValuePtr(tmp);
   //printf("First initialization with julia_home_dir=%s\n",julia_home_dir);
-
-#ifdef WITH_JULIA_RELEASE
-  jl_init(julia_home_dir);
-#else 
-  jlapi_init(julia_home_dir,mode);
-#endif
+// printf("copy stacks ");
+// #ifdef COPY_STACKS
+//   printf("defined \n");
+// #else
+//   printf("undefined \n");
+// #endif
+// printf("JL_SET_STACK_BASE ");
+// #ifdef JL_SET_STACK_BASE
+//   printf("defined \n");
+// #else
+//   printf("undefined \n");
+// #endif
+//#ifdef WITH_JULIA_RELEASE
+  if(strcmp(julia_home_dir,"")==0) {
+    jl_init(NULL);
+    JL_SET_STACK_BASE;
+  } else {
+    jl_init(julia_home_dir);
+    JL_SET_STACK_BASE;
+  }
+//#else 
+//  jlapi_init(julia_home_dir,mode);
+//#endif
  
   return Qtrue;
 }
@@ -46,7 +70,7 @@ VALUE jl_value_to_VALUE(jl_value_t *res) {
   VALUE resRb;
   jl_value_t *tmp;
   jl_function_t *call;
-
+  
   if(res!=NULL) { //=> get a result
     //printf("typeof=%s\n",jl_typeof_str(res));
     if(strcmp(jl_typeof_str(res),"Int64")==0 || strcmp(jl_typeof_str(res),"Int32")==0) 
@@ -139,10 +163,11 @@ VALUE jl_value_to_VALUE(jl_value_t *res) {
       }
       return resRb;
     }
+    //printf("unconverted!!!");
     resRb=rb_str_new2("__unconverted(");
     rb_str_cat2(resRb, jl_typeof_str(res));
     rb_str_cat2(resRb, ")__\n");
-    printf("%s\n",jl_bytestring_ptr(jl_eval_string("\"$(ans)\"")));
+    //printf("%s\n",jl_bytestring_ptr(jl_eval_string("\"$(ans)\"")));
     // jl_function_t *call=(jl_function_t*)jl_get_global(jl_base_module, jl_symbol("show"));
     // if (call) jl_call1(call,res);
     // else printf("call failed!\n");
@@ -150,9 +175,10 @@ VALUE jl_value_to_VALUE(jl_value_t *res) {
     return resRb;
   }
   //=> No result (command incomplete or syntax error)
-#ifndef WITH_JULIA_RELEASE
-  jlapi_print_stderr(); //If this happens but this is really not sure!
-#endif
+//#ifndef WITH_JULIA_RELEASE
+//  jlapi_print_stderr(); //If this happens but this is really not sure!
+//#endif
+  //printf("incomplete!!!");
   resRb=rb_str_new2("__incomplete");
   if(jl_exception_occurred()!=NULL) {
     rb_str_cat2(resRb, "(");
@@ -172,18 +198,33 @@ VALUE Julia_eval(VALUE obj, VALUE cmd, VALUE print_stdout)
 {
   char *cmdString;
   jl_value_t *res;
+  VALUE resRb;
    
   cmdString=StringValuePtr(cmd);
-#ifndef WITH_JULIA_RELEASE
+  //printf("cmd=%s\n",cmdString);
+//#ifndef WITH_JULIA_RELEASE
   //This flush redirected stdout before printing
-  if(print_stdout!=Qnil) jlapi_get_stdout();
-#endif
+  //if(print_stdout!=Qnil) jlapi_get_stdout();
+//#endif
+  //jl_gc_disable();
   res=jl_eval_string(cmdString);
-  jl_set_global(jl_base_module, jl_symbol("ans"),res);
-#ifndef WITH_JULIA_RELEASE
-  if(print_stdout!=Qnil) jlapi_print_stdout();
-#endif
-  return jl_value_to_VALUE(res);
+  //printf("cmd=%s\n",cmdString);
+  if (jl_exception_occurred()) {
+            jl_show(jl_stderr_obj(), jl_exception_occurred());
+            JL_PRINTF(jl_stderr_stream(), "\n");
+            resRb=Qnil;
+  } else {
+    //JL_GC_PUSH1(&res);
+    //printf("cmd=%s\n",cmdString);
+  //jl_set_global(jl_base_module, jl_symbol("ans"),res);
+//#ifndef WITH_JULIA_RELEASE
+//  if(print_stdout!=Qnil) jlapi_print_stdout();
+//#endif
+  resRb=jl_value_to_VALUE(res);
+  //JL_GC_POP();
+  }
+  //jl_gc_enable();
+  return resRb;
 }
 
 VALUE Julia_exec(VALUE obj, VALUE cmd, VALUE get_stdout)
@@ -195,11 +236,12 @@ VALUE Julia_exec(VALUE obj, VALUE cmd, VALUE get_stdout)
   cmdString=StringValuePtr(cmd);
   res=jl_eval_string(cmdString);
   jl_set_global(jl_base_module, jl_symbol("ans"),res);
-  if(get_stdout!=Qnil) {
-    outString=jlapi_get_stdout();
-    jl_set_global(jl_base_module, jl_symbol("rbout"),jl_cstr_to_string(outString));
-    return  rb_str_new2(outString);
-  } else return Qnil;
+  //if(get_stdout!=Qnil) {
+  //  outString=jlapi_get_stdout();
+  //  jl_set_global(jl_base_module, jl_symbol("rbout"),jl_cstr_to_string(outString));
+  //  return  rb_str_new2(outString);
+  //} else 
+  return Qnil;
 }
 
 
@@ -279,7 +321,7 @@ jl_value_t* util_VALUE_to_jl_value(VALUE arr)
     //-| This is maybe faster and can be developped in julia-api as jl_vector_float64(n) for example.
     //ans=jl_alloc_array_1d(jl_float64_type,n);
     for(i=0;i<n;i++) {
-      elt=jlapi_box_float64(NUM2DBL(rb_ary_entry(arr,i)));
+      elt=jl_box_float64(NUM2DBL(rb_ary_entry(arr,i)));
       jl_arrayset(ans,elt,i);
     }
   } else if(class==rb_cFixnum || class==rb_cBignum) {
@@ -291,14 +333,14 @@ jl_value_t* util_VALUE_to_jl_value(VALUE arr)
   } else if(class==rb_cTrueClass || class==rb_cFalseClass) {
     //ans=jl_alloc_array_1d(jl_bool_type,n);
     for(i=0;i<n;i++) {
-      elt=jlapi_box_bool(rb_class_of(rb_ary_entry(arr,i))==rb_cFalseClass ? 0 : 1);
+      elt=jl_box_bool(rb_class_of(rb_ary_entry(arr,i))==rb_cFalseClass ? 0 : 1);
       
     }
   } else if(class==rb_cString) {
     //ans=jl_alloc_array_1d(jl_utf8_string_type,n);
     for(i=0;i<n;i++) {
       tmp=rb_ary_entry(arr,i);
-      elt=jl_cstr_to_string(mkChar(StringValuePtr(tmp)));
+      elt=jl_cstr_to_string(StringValuePtr(tmp));
       jl_arrayset(ans,elt,i);
     }
   } else ans=NULL;
