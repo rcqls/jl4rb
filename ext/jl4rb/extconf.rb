@@ -1,16 +1,22 @@
 require "mkmf"
 require 'fileutils' #if RUBY_VERSION < "1.9"
 
-#$prefix=ENV["JLAPI_HOME"] || File.join(ENV["HOME"],".jlapi/julia") || ENV["JULIA_HOME"]
-$prefix=ENV["JULIA_DIR"]
-#p  $prefix
-$prefix_include,$prefix_lib=[],[]
-[$prefix+"/include/julia",$prefix+"/usr/include",$prefix+"/src",$prefix+"/src/support"].each do |incl| 
-	$prefix_include << incl if File.exists? incl
-end
 
-([$prefix+"/lib/julia",$prefix+"/usr/lib"]+(RUBY_PLATFORM=~/(?:mingw|msys)/ ? [$prefix+"/bin"] : [])).each do |lib|
-	$prefix_lib << lib if File.exists? lib
+$prefix_include,$prefix_lib=[],[]
+if RUBY_PLATFORM =~ /linux/
+    $prefix_include << "/usr/include/"+RUBY_PLATFORM+"/julia"
+    $prefix_lib << "/usr/lib/"+RUBY_PLATFORM+"/julia"
+else
+    #$prefix=ENV["JLAPI_HOME"] || File.join(ENV["HOME"],".jlapi/julia") || ENV["JULIA_HOME"]
+    $prefix=ENV["JULIA_DIR"]
+    #p  $prefix
+    [$prefix+"/include/julia",$prefix+"/usr/include",$prefix+"/src",$prefix+"/src/support"].each do |incl| 
+    	$prefix_include << incl if File.exists? incl
+    end
+
+    ([$prefix+"/lib/julia",$prefix+"/usr/lib"]+(RUBY_PLATFORM=~/(?:mingw|msys)/ ? [$prefix+"/bin"] : [])).each do |lib|
+    	$prefix_lib << lib if File.exists? lib
+    end
 end
 
 def jl4rb_makefile(incs,libs) 
