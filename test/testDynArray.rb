@@ -1,3 +1,5 @@
+require 'R4rb'
+require 'jl4rb'
 require File.expand_path("~/Github/dyndoc/lib/dyndoc/common/dynArray")
 
 Array.initR

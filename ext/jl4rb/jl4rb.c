@@ -18,7 +18,7 @@
 
 //-| next macros already exist in ruby and are undefined here
 //#undef T_FLOAT
-//#undef NORETURN
+#undef NORETURN
 #include "ruby.h"
 
 #define length(a) jl_array_size(a,0)
@@ -334,7 +334,7 @@ jl_value_t* util_VALUE_to_jl_value(VALUE arr)
     //ans=jl_alloc_array_1d(jl_bool_type,n);
     for(i=0;i<n;i++) {
       elt=jl_box_bool(rb_class_of(rb_ary_entry(arr,i))==rb_cFalseClass ? 0 : 1);
-      
+      jl_arrayset(ans,elt,i);
     }
   } else if(class==rb_cString) {
     //ans=jl_alloc_array_1d(jl_utf8_string_type,n);
@@ -477,6 +477,9 @@ VALUE JuliaVect_set(VALUE self,VALUE arr)
   tmp=rb_str_dup(rb_iv_get(self,"@name"));
   tmp=rb_str_cat2(tmp,"=_ruby_export_");
   cmd=StringValuePtr(tmp);
+  // printf("cmd=%s\n",cmd);
+  // jl_eval_string("show(_ruby_export_)");
+  // printf("cmd->done\n");
   jl_eval_string(cmd);
   return self;
 }
