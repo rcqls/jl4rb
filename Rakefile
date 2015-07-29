@@ -47,10 +47,14 @@ PKGDIR=opt["pkgdir"] || ENV["RUBYGEMS_PKGDIR"]  || "pkg"
 #   pkg.need_tar = false
 # end
 
-# New: it is less verbose than the previous one
+# it is less verbose than the previous one
 desc "Create #{PKG_NAME+'-'+PKG_VERSION+'.gem'}" 
 task :package do |t|
   #Gem::Builder.new(spec_client).build
+  unless File.directory? PKGDIR
+    require 'fileutils'
+    FileUtils.mkdir_p PKGDIR
+  end
   Gem::Package.build(spec)
   `mv #{PKG_NAME+'-'+PKG_VERSION+'.gem'} #{PKGDIR}`
 end
@@ -72,6 +76,12 @@ end
 ## quick install task
 desc "Quick install #{File.join(PKGDIR,PKG_NAME+'-'+PKG_VERSION+'.gem')}"
 task :install do |t|
+  `gem install #{File.join(PKGDIR,PKG_NAME+'-'+PKG_VERSION+'.gem')} --local --no-rdoc --no-ri`
+  rm_rf File.join(PKGDIR,PKG_NAME+'-'+PKG_VERSION) if File.exists? File.join(PKGDIR,PKG_NAME+'-'+PKG_VERSION)
+end
+
+desc "Docker install #{File.join(PKGDIR,PKG_NAME+'-'+PKG_VERSION+'.gem')}"
+task :docker => :package do |t|
   `gem install #{File.join(PKGDIR,PKG_NAME+'-'+PKG_VERSION+'.gem')} --local --no-rdoc --no-ri`
   rm_rf File.join(PKGDIR,PKG_NAME+'-'+PKG_VERSION) if File.exists? File.join(PKGDIR,PKG_NAME+'-'+PKG_VERSION)
 end
