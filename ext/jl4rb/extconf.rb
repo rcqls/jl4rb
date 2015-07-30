@@ -3,7 +3,7 @@ require 'fileutils' #if RUBY_VERSION < "1.9"
 
 
 $prefix_include,$prefix_lib=[],[]
-if RUBY_PLATFORM =~ /linux/
+if RUBY_PLATFORM =~ /linux/ and File.exists? "/usr/include/"+RUBY_PLATFORM+"/julia"
     $prefix_include << "/usr/include/"+RUBY_PLATFORM+"/julia"
     $prefix_lib << "/usr/lib/"+RUBY_PLATFORM+"/julia"
 else
