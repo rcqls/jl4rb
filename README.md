@@ -1,6 +1,6 @@
 # Julia for Ruby
 
-This is an attempt to embed the julia language in ruby. 
+This is an attempt to embed the julia language in ruby.
 Actually, very basic julia types are converted to ruby objects.
 
 ## Install
@@ -11,7 +11,7 @@ Clone this git and
 
 	rake package
 	[sudo] gem install pkg/jl4rb-???.gem
-		
+
 
 ## Test
 
@@ -28,10 +28,10 @@ require 'jl4rb'
 # Julia.init since automatically called once
 Julia << 'using RDatasets' # A bit slow, julia and RDatasets initializations
 
-# A multilines call 
+# A multilines call
 a=Julia << <<JLEND
 iris=dataset("datasets","iris")
-array(iris[2])
+convert(Array,iris[2])
 JLEND
 
 # a is then a ruby object
@@ -39,7 +39,7 @@ p a
 
 # another call
 Julia << 'map(string,names(iris))'
-``` 
+```
 
 ## Remark
 

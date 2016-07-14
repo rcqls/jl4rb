@@ -211,7 +211,7 @@ VALUE Julia_eval(VALUE obj, VALUE cmd, VALUE print_stdout)
   //printf("cmd=%s\n",cmdString);
   if (jl_exception_occurred()) {
             jl_show(jl_stderr_obj(), jl_exception_occurred());
-            JL_PRINTF(jl_stderr_stream(), "\n");
+            jl_printf(jl_stderr_stream(), "\n");
             resRb=Qnil;
   } else {
     //JL_GC_PUSH1(&res);
