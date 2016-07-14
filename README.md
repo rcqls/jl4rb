@@ -6,12 +6,18 @@ Actually, very basic julia types are converted to ruby objects.
 ## Install
 
 Clone this git and
+```{.bash}
+export JULIA_DIR=<your julia directory> # or put it in your .bashrc (or equivalent)
+## for linux ubuntu
+export JULIA_DIR=/usr
+## for MacOSX
+export JULIA_DIR=/Applications/Julia-0.4.6.app/Contents/Resources/julia
+```
 
-	export JULIA_DIR=<your julia directory> # or put it in your .bashrc (or equivalent)
-
-	rake package
-	[sudo] gem install pkg/jl4rb-???.gem
-
+```{.bash}
+rake package
+[sudo] gem install pkg/jl4rb-???.gem
+```
 
 ## Test
 
