@@ -3,7 +3,7 @@
   jl4rb.c
 
 **********************************************************************/
- 
+
 #include "julia.h"
 #include <stdio.h>
 #include <string.h>
@@ -12,7 +12,7 @@
 //#define WITH_JULIA_RELEASE
 
 //#ifdef WITH_JULIA_RELEASE
-//#else 
+//#else
 //#include "julia-api.h"
 //#endif
 
@@ -51,29 +51,29 @@ VALUE Julia_init(VALUE obj, VALUE args)
 //#ifdef WITH_JULIA_RELEASE
   if(strcmp(julia_home_dir,"")==0) {
     jl_init(NULL);
-    JL_SET_STACK_BASE;
+    //JL_SET_STACK_BASE;
   } else {
     jl_init(julia_home_dir);
-    JL_SET_STACK_BASE;
+    //JL_SET_STACK_BASE;
   }
-//#else 
+//#else
 //  jlapi_init(julia_home_dir,mode);
 //#endif
- 
+
   return Qtrue;
 }
 
 //Maybe try to use cpp stuff to get the output inside julia system (ccall,cgen and cgutils)
-//-| TODO: after adding in the jlapi.c jl_is_<C_type> functions replace the strcmp! 
+//-| TODO: after adding in the jlapi.c jl_is_<C_type> functions replace the strcmp!
 VALUE jl_value_to_VALUE(jl_value_t *res) {
   size_t i=0,k,nd,d;
   VALUE resRb;
   jl_value_t *tmp;
   jl_function_t *call;
-  
+
   if(res!=NULL) { //=> get a result
     //printf("typeof=%s\n",jl_typeof_str(res));
-    if(strcmp(jl_typeof_str(res),"Int64")==0 || strcmp(jl_typeof_str(res),"Int32")==0) 
+    if(strcmp(jl_typeof_str(res),"Int64")==0 || strcmp(jl_typeof_str(res),"Int32")==0)
     //if(jl_is_long(res)) //does not work because of DLLEXPORT
     {
       //printf("elt=%d\n",jl_unbox_long(res));
@@ -81,35 +81,35 @@ VALUE jl_value_to_VALUE(jl_value_t *res) {
     }
     else
     if(strcmp(jl_typeof_str(res),"Float64")==0)
-    //if(jl_is_float64(res)) 
+    //if(jl_is_float64(res))
     {
       return rb_float_new(jl_unbox_float64(res));
     }
     else
     if(strcmp(jl_typeof_str(res),"Float32")==0)
-    //if(jl_is_float64(res)) 
+    //if(jl_is_float64(res))
     {
       return rb_float_new(jl_unbox_float32(res));
     }
-    else 
+    else
     if(strcmp(jl_typeof_str(res),"Bool")==0)
-    //if(jl_is_bool(res)) 
+    //if(jl_is_bool(res))
     {
       return (jl_unbox_bool(res) ? Qtrue : Qfalse);
     }
-    else 
-    if(strcmp(jl_typeof_str(res),"DataType")==0) 
+    else
+    if(strcmp(jl_typeof_str(res),"DataType")==0)
     {
       return rb_str_new2(jl_typename_str(res));
     }
-    else 
+    else
     if(strcmp(jl_typeof_str(res),"Nothing")==0)
     {
       return Qnil;
     }
     else
     if(strcmp(jl_typeof_str(res),"Complex")==0)
-    //if(jl_is_bool(res)) 
+    //if(jl_is_bool(res))
     {
       resRb = rb_eval_string("require('complex');Complex.new(0,0)");
       rb_iv_set(resRb,"@real",jl_value_to_VALUE(jl_get_field(res, "re")));
@@ -118,7 +118,7 @@ VALUE jl_value_to_VALUE(jl_value_t *res) {
     }
     else
     if(strcmp(jl_typeof_str(res),"Regex")==0)
-    //if(jl_is_bool(res)) 
+    //if(jl_is_bool(res))
     {
       // call=(jl_function_t*)jl_get_global(jl_base_module, jl_symbol("show"));
       // printf("ici\n");
@@ -149,8 +149,8 @@ VALUE jl_value_to_VALUE(jl_value_t *res) {
         }
         return resRb;
       }
-      //TODO: multidim array ruby equivalent???? Is it necessary 
-      
+      //TODO: multidim array ruby equivalent???? Is it necessary
+
     }
     else
     if(strcmp(jl_typeof_str(res),"Tuple")==0 )
@@ -199,7 +199,7 @@ VALUE Julia_eval(VALUE obj, VALUE cmd, VALUE print_stdout)
   char *cmdString;
   jl_value_t *res;
   VALUE resRb;
-   
+
   cmdString=StringValuePtr(cmd);
   //printf("cmd=%s\n",cmdString);
 //#ifndef WITH_JULIA_RELEASE
@@ -232,7 +232,7 @@ VALUE Julia_exec(VALUE obj, VALUE cmd, VALUE get_stdout)
   char *cmdString,*outString;
   jl_value_t *res;
   VALUE out;
-   
+
   cmdString=StringValuePtr(cmd);
   res=jl_eval_string(cmdString);
   jl_set_global(jl_base_module, jl_symbol("ans"),res);
@@ -240,7 +240,7 @@ VALUE Julia_exec(VALUE obj, VALUE cmd, VALUE get_stdout)
   //  outString=jlapi_get_stdout();
   //  jl_set_global(jl_base_module, jl_symbol("rbout"),jl_cstr_to_string(outString));
   //  return  rb_str_new2(outString);
-  //} else 
+  //} else
   return Qnil;
 }
 
@@ -292,13 +292,13 @@ jl_value_t *util_getExpr_with_arg(VALUE self)
 
 
 VALUE util_jl_value_to_VALUE(jl_value_t *ans)
-{   
+{
   return jl_value_to_VALUE(ans);
 }
 
 
-//-| Transform only a Vector or Atom 
-//-| Todo: when not a vector, avoid transform to vector first. 
+//-| Transform only a Vector or Atom
+//-| Todo: when not a vector, avoid transform to vector first.
 jl_value_t* util_VALUE_to_jl_value(VALUE arr)
 {
   jl_value_t *ans,*elt;
@@ -313,7 +313,7 @@ jl_value_t* util_VALUE_to_jl_value(VALUE arr)
     vect=0;
   } else {
     n=RARRAY_LEN(arr);
-  }  
+  }
 
   class=rb_class_of(rb_ary_entry(arr,0));
   ans=jl_alloc_cell_1d(n);
@@ -325,7 +325,7 @@ jl_value_t* util_VALUE_to_jl_value(VALUE arr)
       jl_arrayset(ans,elt,i);
     }
   } else if(class==rb_cFixnum || class==rb_cBignum) {
-    //ans=jl_alloc_array_1d(jl_long_type,n);  
+    //ans=jl_alloc_array_1d(jl_long_type,n);
     for(i=0;i<n;i++) {
       elt=jl_box_long(NUM2INT(rb_ary_entry(arr,i)));
       jl_arrayset(ans,elt,i);
@@ -345,7 +345,7 @@ jl_value_t* util_VALUE_to_jl_value(VALUE arr)
     }
   } else ans=NULL;
   if(!vect && ans) ans=jl_arrayref(ans,0);
-  return ans; 
+  return ans;
 }
 
 VALUE JuliaVect_initialize(VALUE self, VALUE name)
@@ -377,7 +377,7 @@ VALUE JuliaVect_length(VALUE self)
 {
   jl_value_t* ans;
   char *name;
- 
+
   ans = util_getVar(self);
 
   if(ans==NULL) {
@@ -394,8 +394,8 @@ VALUE JuliaVect_get(VALUE self)
   VALUE res;
   char *name;
   int n,i;
-  VALUE res2; 
-  
+  VALUE res2;
+
   ans = util_getVar(self);
 
   if(ans==NULL) {
@@ -405,7 +405,7 @@ VALUE JuliaVect_get(VALUE self)
 
   res=util_jl_value_to_VALUE(ans);
   if(length(ans)==1) res=rb_ary_entry(res,0);
-  return res; 
+  return res;
 }
 
 VALUE JuliaVect_get_with_arg(VALUE self)
@@ -414,16 +414,16 @@ VALUE JuliaVect_get_with_arg(VALUE self)
   VALUE res;
   char *name;
   int n,i;
-  VALUE res2; 
+  VALUE res2;
 
   ans = util_getExpr_with_arg(self);
- 
+
   if(ans==NULL) {
     //printf("Sortie de get avec nil\n");
     return Qnil;
   }
   res=util_jl_value_to_VALUE(ans);
- 
+
 //printf("JuliaVect_get_with_arg: length(ans)=%d\n",length(ans));
  if (length(ans)==1) res=rb_ary_entry(res,0);
 
@@ -439,7 +439,7 @@ VALUE JuliaVect_get_with_arg(VALUE self)
 //   VALUE res;
 //   int n,i;
 //   i = FIX2INT(index);
-  
+
 //   ans = util_getVar(self);
 //   n=length(ans);
 //   printf("i=%d and n=%d\n",i,n);
@@ -458,12 +458,12 @@ VALUE JuliaVect_get_with_arg(VALUE self)
 //   VALUE tmp;
 
 //   ans=util_VALUE_to_jl_value(arr);
-  
+
 //   tmp=rb_iv_get(self,"@name");
 //   name = StringValuePtr(tmp);
 //   jl_set_global(jl_main_module, jl_symbol(name),ans);
 
-//   return self; 
+//   return self;
 // }
 
 VALUE JuliaVect_set(VALUE self,VALUE arr)
@@ -471,7 +471,7 @@ VALUE JuliaVect_set(VALUE self,VALUE arr)
   VALUE tmp;
   char *cmd;
   // defineVar(install(".rubyExport"),util_VALUE2jl_value_t*(arr),R_GlobalEnv);
-  // tmp=rb_iv_get(self,"@arg"); 
+  // tmp=rb_iv_get(self,"@arg");
   // util_eval1string(rb_str_cat2(rb_str_cat2(rb_str_dup(rb_iv_get(self,"@name")),StringValuePtr(tmp)),"<-.rubyExport"));
   jl_set_global(jl_main_module, jl_symbol("_ruby_export_"),util_VALUE_to_jl_value(arr));
   tmp=rb_str_dup(rb_iv_get(self,"@name"));
@@ -494,7 +494,7 @@ VALUE JuliaVect_assign(VALUE obj, VALUE name,VALUE arr)
   tmp = StringValuePtr(name);
   jl_set_global(jl_main_module, jl_symbol(tmp),ans);
 
-  return Qnil; 
+  return Qnil;
 }
 
 VALUE JuliaVect_set_with_arg(VALUE self,VALUE arr)
@@ -502,7 +502,7 @@ VALUE JuliaVect_set_with_arg(VALUE self,VALUE arr)
   VALUE tmp;
   char *cmd;
   // defineVar(install(".rubyExport"),util_VALUE2jl_value_t*(arr),R_GlobalEnv);
-  // tmp=rb_iv_get(self,"@arg"); 
+  // tmp=rb_iv_get(self,"@arg");
   // util_eval1string(rb_str_cat2(rb_str_cat2(rb_str_dup(rb_iv_get(self,"@name")),StringValuePtr(tmp)),"<-.rubyExport"));
   jl_set_global(jl_main_module, jl_symbol("_ruby_export_"),util_VALUE_to_jl_value(arr));
   tmp=rb_str_dup(rb_iv_get(self,"@arg"));
@@ -551,7 +551,7 @@ Init_jl4rb()
   rb_define_method(cJuliaVect,"valid?",JuliaVect_isValid,0);
   rb_define_method(cJuliaVect,"length",JuliaVect_length,0);
   //rb_define_method(cJuliaVect,"[]",JuliaVect_aref,1);
-  
+
   rb_define_attr(cJuliaVect,"name",1,1);
   rb_define_attr(cJuliaVect,"type",1,1);
 
