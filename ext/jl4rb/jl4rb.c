@@ -156,10 +156,11 @@ VALUE jl_value_to_VALUE(jl_value_t *res) {
     if(strcmp(jl_typeof_str(res),"Tuple")==0 )
     //if(jl_is_array(res))
     {
-      d=jl_tuple_len(res);
+      d=jl_nfields(res); //Before O.3: d=jl_tuple_len(res);
       resRb = rb_ary_new2(d);
       for(i=0;i<d;i++) {
-        rb_ary_store(resRb,i,jl_value_to_VALUE(jl_tupleref(res,i)));
+        //rb_ary_store(resRb,i,jl_value_to_VALUE(jl_tupleref(res,i)));
+        rb_ary_store(resRb,i,jl_value_to_VALUE(jl_fieldref(res,i)));
       }
       return resRb;
     }

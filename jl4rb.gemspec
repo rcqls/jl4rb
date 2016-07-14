@@ -2,7 +2,7 @@ require 'rubygems'
 require 'rubygems/package_task'
 
 PKG_NAME='jl4rb'
-PKG_VERSION='0.0.4'
+PKG_VERSION='0.0.5'
 PKG_FILES=FileList[
     'Rakefile','jl4rb.gemspec',
     'ext/jl4rb/*.c',
