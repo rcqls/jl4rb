@@ -4,6 +4,7 @@
 *.o
 *.so
 *.dylib
+*.bundle
 *.png
 *.jpeg
 *.jpg
