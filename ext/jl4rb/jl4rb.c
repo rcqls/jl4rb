@@ -131,7 +131,7 @@ VALUE jl_value_to_VALUE(jl_value_t *res) {
     else
     if(strcmp(jl_typeof_str(res),"String")==0 || strcmp(jl_typeof_str(res),"ASCIIString")==0 || strcmp(jl_typeof_str(res),"UTF8String")==0)
     {
-      //printf("value=%s\n",jl_bytestring_ptr(res));
+      //printf("value=%s\n",jl_string_ptr(res));
       return rb_str_new2(jl_string_ptr(res));
     }
     else
@@ -168,7 +168,7 @@ VALUE jl_value_to_VALUE(jl_value_t *res) {
     resRb=rb_str_new2("__unconverted(");
     rb_str_cat2(resRb, jl_typeof_str(res));
     rb_str_cat2(resRb, ")__\n");
-    //printf("%s\n",jl_bytestring_ptr(jl_eval_string("\"$(ans)\"")));
+    //printf("%s\n",jl_string_ptr(jl_eval_string("\"$(ans)\"")));
     // jl_function_t *call=(jl_function_t*)jl_get_global(jl_base_module, jl_symbol("show"));
     // if (call) jl_call1(call,res);
     // else printf("call failed!\n");
@@ -185,7 +185,7 @@ VALUE jl_value_to_VALUE(jl_value_t *res) {
     rb_str_cat2(resRb, "(");
       rb_str_cat2(resRb,jl_typeof_str(jl_exception_occurred()));
     jl_value_t* err=jl_get_field(jl_exception_occurred(),"msg");
-    if(err!=NULL) printf("%s: %s\n",jl_typeof_str(jl_exception_occurred()),jl_bytestring_ptr(err));
+    if(err!=NULL) printf("%s: %s\n",jl_typeof_str(jl_exception_occurred()),jl_string_ptr(err));
     jl_exception_clear();
     rb_str_cat2(resRb, ")");
   }
