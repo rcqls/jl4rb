@@ -16,7 +16,7 @@ else
     	$prefix_include << incl if File.exists? incl
     end
 
-    ([$prefix+"/lib/julia",$prefix+"/usr/lib"]+(RUBY_PLATFORM=~/(?:mingw|msys)/ ? [$prefix+"/bin"] : [])).each do |lib|
+    ([$prefix+"/lib/julia",$prefix+"/usr/lib",$prefix+"/lib"]+(RUBY_PLATFORM=~/(?:mingw|msys)/ ? [$prefix+"/bin"] : [])).each do |lib|
     	$prefix_lib << lib if File.exists? lib
     end
 end

@@ -129,10 +129,10 @@ VALUE jl_value_to_VALUE(jl_value_t *res) {
       return resRb;
     }
     else
-    if(strcmp(jl_typeof_str(res),"ASCIIString")==0 || strcmp(jl_typeof_str(res),"UTF8String")==0)
+    if(strcmp(jl_typeof_str(res),"String")==0 || strcmp(jl_typeof_str(res),"ASCIIString")==0 || strcmp(jl_typeof_str(res),"UTF8String")==0)
     {
       //printf("value=%s\n",jl_bytestring_ptr(res));
-      return rb_str_new2(jl_bytestring_ptr(res));
+      return rb_str_new2(jl_string_ptr(res));
     }
     else
     if(strcmp(jl_typeof_str(res),"Array")==0 )
