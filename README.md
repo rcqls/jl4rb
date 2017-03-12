@@ -11,7 +11,7 @@ export JULIA_DIR=<your julia directory> # or put it in your .bashrc (or equivale
 ## for linux ubuntu
 export JULIA_DIR=/usr
 ## for MacOSX
-export JULIA_DIR=/Applications/Julia-0.4.6.app/Contents/Resources/julia
+export JULIA_DIR=/Applications/Julia-0.5.app/Contents/Resources/julia
 ```
 
 ```{.bash}
@@ -25,7 +25,10 @@ Then, in a irb console:
 
 ```{.ruby execute="false"}
 require 'jl4rb'			# => true
-Julia << 'LOAD_PATH'	# => [<your julia home>/local/share/julia/site/v0.3", "<your julia home>/share/julia/site/v0.3"]
+Julia << 'LOAD_PATH'	# => ["/Applications/Julia-0.5.app/Contents/Resources/julia/local/share/julia/site/v0.5", "/Applications/Julia-0.5.app/Contents/Resources/julia/share/julia/site/v0.5"]
+Julia << 'Libdl.DL_LOAD_PATH'
+## required for RDatasets because libz.dylib not found for MacOSX
+Julia << 'push!(Libdl.DL_LOAD_PATH,"/usr/lib");push!(Libdl.DL_LOAD_PATH,"/usr/local/lib")'
 ```
 
 ## Example
