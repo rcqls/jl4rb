@@ -15,8 +15,7 @@ export JULIA_DIR=/Applications/Julia-0.5.app/Contents/Resources/julia
 ```
 
 ```{.bash}
-rake package
-[sudo] gem install pkg/jl4rb-???.gem
+[sudo] gem install jl4rb
 ```
 
 ## Test
