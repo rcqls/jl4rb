@@ -49,13 +49,7 @@ VALUE Julia_init(VALUE obj, VALUE args)
 //   printf("undefined \n");
 // #endif
 //#ifdef WITH_JULIA_RELEASE
-  if(strcmp(julia_home_dir,"")==0) {
-    jl_init(NULL);
-    //JL_SET_STACK_BASE;
-  } else {
-    jl_init(julia_home_dir);
-    //JL_SET_STACK_BASE;
-  }
+   jl_init();
 //#else
 //  jlapi_init(julia_home_dir,mode);
 //#endif
