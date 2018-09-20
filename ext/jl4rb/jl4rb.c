@@ -9,6 +9,8 @@
 #include <string.h>
 #include <math.h>
 
+JULIA_DEFINE_FAST_TLS()
+
 //#define WITH_JULIA_RELEASE
 
 //#ifdef WITH_JULIA_RELEASE
@@ -20,6 +22,7 @@
 //#undef T_FLOAT
 #undef NORETURN
 #include "ruby.h"
+#include "ruby/version.h"
 
 #define length(a) jl_array_size(a,0)
 
@@ -49,13 +52,14 @@ VALUE Julia_init(VALUE obj, VALUE args)
 //   printf("undefined \n");
 // #endif
 //#ifdef WITH_JULIA_RELEASE
-  if(strcmp(julia_home_dir,"")==0) {
-    jl_init(NULL);
-    //JL_SET_STACK_BASE;
-  } else {
-    jl_init(julia_home_dir);
-    //JL_SET_STACK_BASE;
-  }
+  // if(strcmp(julia_home_dir,"")==0) {
+  //   jl_init(); //(NULL);
+  //   //JL_SET_STACK_BASE;
+  // } else {
+    jl_init(); //(julia_home_dir);
+    //julia_init(JL_IMAGE_JULIA_HOME);
+  //   //JL_SET_STACK_BASE;
+  // }
 //#else
 //  jlapi_init(julia_home_dir,mode);
 //#endif
@@ -211,7 +215,8 @@ VALUE Julia_eval(VALUE obj, VALUE cmd, VALUE print_stdout)
   res=jl_eval_string(cmdString);
   //printf("cmd=%s\n",cmdString);
   if (jl_exception_occurred()) {
-            jl_show(jl_stderr_obj(), jl_exception_occurred());
+            //jl_show(jl_stderr_obj(), jl_exception_occurred());
+            jl_call2(jl_get_function(jl_base_module, "show"), jl_stderr_obj(), jl_exception_occurred());
             jl_printf(jl_stderr_stream(), "\n");
             resRb=Qnil;
   } else {
@@ -325,7 +330,11 @@ jl_value_t* util_VALUE_to_jl_value(VALUE arr)
       elt=jl_box_float64(NUM2DBL(rb_ary_entry(arr,i)));
       jl_arrayset(ans,elt,i);
     }
+#if RUBY_API_VERSION_CODE >= 20400
+  } else if(class==rb_cInteger) {
+#else
   } else if(class==rb_cFixnum || class==rb_cBignum) {
+#endif
     //ans=jl_alloc_array_1d(jl_long_type,n);
     for(i=0;i<n;i++) {
       elt=jl_box_long(NUM2INT(rb_ary_entry(arr,i)));

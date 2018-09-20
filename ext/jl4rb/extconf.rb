@@ -3,12 +3,12 @@ require 'fileutils' #if RUBY_VERSION < "1.9"
 
 
 $prefix_include,$prefix_lib=[],[]
-if RUBY_PLATFORM =~ /linux/
-    $prefix_include << "/usr/include/"+RUBY_PLATFORM+"/julia" if File.exists? "/usr/include/"+RUBY_PLATFORM+"/julia"
-    $prefix_include << "/usr/include/julia" if File.exists? "/usr/include/julia"
+# if RUBY_PLATFORM =~ /linux/
+#     $prefix_include << "/usr/include/"+RUBY_PLATFORM+"/julia" if File.exists? "/usr/include/"+RUBY_PLATFORM+"/julia"
+#     $prefix_include << "/usr/include/julia" if File.exists? "/usr/include/julia"
 
-    $prefix_lib << "/usr/lib/"+RUBY_PLATFORM+"/julia" if File.exists? "/usr/lib/"+RUBY_PLATFORM+"/julia"
-else
+#     $prefix_lib << "/usr/lib/"+RUBY_PLATFORM+"/julia" if File.exists? "/usr/lib/"+RUBY_PLATFORM+"/julia"
+# else
     #$prefix=ENV["JLAPI_HOME"] || File.join(ENV["HOME"],".jlapi/julia") || ENV["JULIA_HOME"]
     $prefix=ENV["JULIA_DIR"]
     #p  $prefix
@@ -19,7 +19,7 @@ else
     ([$prefix+"/lib/julia",$prefix+"/usr/lib",$prefix+"/lib"]+(RUBY_PLATFORM=~/(?:mingw|msys)/ ? [$prefix+"/bin"] : [])).each do |lib|
     	$prefix_lib << lib if File.exists? lib
     end
-end
+# end
 
 def jl4rb_makefile(incs,libs)
     #$CFLAGS = "-I"+inc+" -I."
@@ -27,8 +27,10 @@ def jl4rb_makefile(incs,libs)
     # $LDFLAGS = " -Wl,-rpath,"+lib+" -L"+lib if lib
     # $libs = (enable_config("julia-release") ? " -ljulia-release" : " -ljulia-api" )
 
- 	$CFLAGS =   incs.map{|inc| "-I"+inc}.join(" ")+" -I."
-    $LDFLAGS = " "+libs.map{|lib| "-Wl,-rpath,"+lib+" -L"+lib}.join(" ") if libs
+    ## TODO: utiliser julia-config 
+
+ 	$CFLAGS = "-DJULIA_ENABLE_THREADING=1 -fPIC " + incs.map{|inc| "-I"+inc}.join(" ")+" -I."
+    $LDFLAGS = " "+libs.map{|lib| "-Wl,-rpath,'"+lib+"' -L'"+lib+"'"}.join(" ") if libs
     $libs =  " -ljulia"
 
 
@@ -38,6 +40,7 @@ def jl4rb_makefile(incs,libs)
     $objs = [rb4r_name+".o"]
 
     dir_config("R4rb")
+    p ( {:CFLAGS => $CFLAGS, :LDFLAGS => $LDFLAGS, :libs => $libs })
     create_makefile(rb4r_name)
 end
 
