@@ -67,6 +67,11 @@ VALUE Julia_init(VALUE obj, VALUE args)
   return Qtrue;
 }
 
+VALUE Julia_exit(VALUE exitcode) {
+  jl_atexit_hook(exitcode);
+  return Qtrue;
+}
+
 //Maybe try to use cpp stuff to get the output inside julia system (ccall,cgen and cgutils)
 //-| TODO: after adding in the jlapi.c jl_is_<C_type> functions replace the strcmp!
 VALUE jl_value_to_VALUE(jl_value_t *res) {
@@ -531,6 +536,8 @@ Init_jl4rb()
   mJulia = rb_define_module("Julia");
 
   rb_define_module_function(mJulia, "initJL", Julia_init, 1);
+
+  rb_define_module_function(mJulia, "exitJL", Julia_exit, 1);
 
   rb_define_module_function(mJulia, "evalLine", Julia_eval, 2);
 

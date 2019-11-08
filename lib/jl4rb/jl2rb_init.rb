@@ -13,4 +13,8 @@ module Julia
     defined? @@initJL
   end
 
+  def Julia.exit()
+    Julia.exitJL(0)
+  end
+
 end
