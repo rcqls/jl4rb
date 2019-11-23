@@ -278,7 +278,7 @@ VALUE util_jl_value_to_VALUE(jl_value_t *ans)
 //-| Todo: when not a vector, avoid transform to vector first.
 jl_value_t* util_VALUE_to_jl_value(VALUE arr)
 {
-  jl_value_t *ans,*elt;
+  jl_value_t *ans,*elt,*array_type;
   VALUE res,class,tmp;
   int i,n=0,vect=1;
 
@@ -293,39 +293,43 @@ jl_value_t* util_VALUE_to_jl_value(VALUE arr)
   }
 
   class=rb_class_of(rb_ary_entry(arr,0));
-  ans=jl_alloc_cell_1d(n);
+  
   if(class==rb_cFloat) {
     //-| This is maybe faster and can be developped in julia-api as jl_vector_float64(n) for example.
-    //ans=jl_alloc_array_1d(jl_float64_type,n);
+    array_type=jl_apply_array_type((jl_value_t*)jl_float64_type, 1);
+    ans=(jl_value_t*)jl_alloc_array_1d(array_type,n);
     for(i=0;i<n;i++) {
       elt=jl_box_float64(NUM2DBL(rb_ary_entry(arr,i)));
-      jl_arrayset(ans,elt,i);
+      jl_arrayset((jl_array_t*)ans,elt,i);
     }
 #if RUBY_API_VERSION_CODE >= 20400
   } else if(class==rb_cInteger) {
 #else
   } else if(class==rb_cFixnum || class==rb_cBignum) {
 #endif
-    //ans=jl_alloc_array_1d(jl_long_type,n);
+    array_type=jl_apply_array_type((jl_value_t*)jl_long_type, 1);
+    ans=(jl_value_t*)jl_alloc_array_1d(array_type,n);
     for(i=0;i<n;i++) {
       elt=jl_box_long(NUM2INT(rb_ary_entry(arr,i)));
-      jl_arrayset(ans,elt,i);
+      jl_arrayset((jl_array_t*)ans,elt,i);
     }
   } else if(class==rb_cTrueClass || class==rb_cFalseClass) {
-    //ans=jl_alloc_array_1d(jl_bool_type,n);
+    array_type=jl_apply_array_type((jl_value_t*)jl_bool_type, 1);
+    ans=(jl_value_t*)jl_alloc_array_1d(array_type,n);
     for(i=0;i<n;i++) {
       elt=jl_box_bool(rb_class_of(rb_ary_entry(arr,i))==rb_cFalseClass ? 0 : 1);
-      jl_arrayset(ans,elt,i);
+      jl_arrayset((jl_array_t*)ans,elt,i);
     }
   } else if(class==rb_cString) {
-    //ans=jl_alloc_array_1d(jl_utf8_string_type,n);
+    array_type=jl_apply_array_type((jl_value_t*)jl_string_type, 1);
+    ans=(jl_value_t*)jl_alloc_array_1d(array_type,n);
     for(i=0;i<n;i++) {
       tmp=rb_ary_entry(arr,i);
       elt=jl_cstr_to_string(StringValuePtr(tmp));
-      jl_arrayset(ans,elt,i);
+      jl_arrayset((jl_array_t*)ans,elt,i);
     }
   } else ans=NULL;
-  if(!vect && ans) ans=jl_arrayref(ans,0);
+  if(!vect && ans) ans=jl_arrayref((jl_array_t*)ans,0);
   return ans;
 }
 
