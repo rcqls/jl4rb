@@ -2,7 +2,7 @@ require 'rubygems'
 require 'rubygems/package_task'
 
 PKG_NAME='jl4rb'
-PKG_VERSION='0.1.1'
+PKG_VERSION='0.2.2'
 PKG_FILES=FileList[
     'Rakefile','jl4rb.gemspec',
     'ext/jl4rb/*.c',
@@ -22,7 +22,7 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib","ext/jl4rb"]
   s.files = PKG_FILES.to_a
   s.extensions = ["ext/jl4rb/extconf.rb"]
-  s.licenses = ['MIT', 'GPL-2']
+  s.licenses = ['MIT', 'GPL-2.0']
   s.description = <<-EOF
 R is embedded in ruby with some communication support .
 EOF

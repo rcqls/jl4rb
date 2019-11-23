@@ -1,11 +1,8 @@
 module Julia
 
-  def Julia.init(args={})
+  def Julia.init
     unless Julia.alive?
-      args={:img=>File.join(ENV["JULIA_DIR"],"lib")}.merge(args) if ENV["JULIA_DIR"]
-      args={:img=>ENV["JULIA_IMG_DIR"]}.merge(args) if ENV["JULIA_IMG_DIR"]
-      #p [:julia_init,args,ENV]
-      @@initJL=Julia.initJL([args[:img]])
+      @@initJL=Julia.initJL
     end
   end
 

@@ -9,8 +9,6 @@
 #include <string.h>
 #include <math.h>
 
-JULIA_DEFINE_FAST_TLS()
-
 //#define WITH_JULIA_RELEASE
 
 //#ifdef WITH_JULIA_RELEASE
@@ -29,41 +27,9 @@ JULIA_DEFINE_FAST_TLS()
 /************* INIT *********************/
 
 
-VALUE Julia_init(VALUE obj, VALUE args)
+VALUE Julia_init()
 {
-  char **argv,*julia_home_dir;
-  int i,argc;
-  VALUE tmp;
-
-  argc=RARRAY_LEN(args) + 1;
-  tmp=rb_ary_entry(args,0);
-  julia_home_dir=StringValuePtr(tmp);
-  //printf("First initialization with julia_home_dir=%s\n",julia_home_dir);
-// printf("copy stacks ");
-// #ifdef COPY_STACKS
-//   printf("defined \n");
-// #else
-//   printf("undefined \n");
-// #endif
-// printf("JL_SET_STACK_BASE ");
-// #ifdef JL_SET_STACK_BASE
-//   printf("defined \n");
-// #else
-//   printf("undefined \n");
-// #endif
-//#ifdef WITH_JULIA_RELEASE
-  // if(strcmp(julia_home_dir,"")==0) {
-  //   jl_init(); //(NULL);
-  //   //JL_SET_STACK_BASE;
-  // } else {
-    jl_init(); //(julia_home_dir);
-    //julia_init(JL_IMAGE_JULIA_HOME);
-  //   //JL_SET_STACK_BASE;
-  // }
-//#else
-//  jlapi_init(julia_home_dir,mode);
-//#endif
-
+  jl_init();
   return Qtrue;
 }
 
@@ -535,7 +501,7 @@ Init_jl4rb()
 
   mJulia = rb_define_module("Julia");
 
-  rb_define_module_function(mJulia, "initJL", Julia_init, 1);
+  rb_define_module_function(mJulia, "initJL", Julia_init, 0);
 
   rb_define_module_function(mJulia, "exitJL", Julia_exit, 1);
 
