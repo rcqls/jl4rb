@@ -5,15 +5,6 @@ Actually, very basic julia types are converted to ruby objects.
 
 ## Install
 
-Clone this git and
-```{.bash}
-export JULIA_DIR=<your julia directory> # or put it in your .bashrc (or equivalent)
-## for linux ubuntu
-export JULIA_DIR=/usr
-## for MacOSX
-export JULIA_DIR=/Applications/Julia-0.5.app/Contents/Resources/julia
-```
-
 ```{.bash}
 [sudo] gem install jl4rb
 ```
@@ -24,17 +15,16 @@ Then, in a irb console:
 
 ```{.ruby execute="false"}
 require 'jl4rb'			# => true
-Julia << 'LOAD_PATH'	# => ["/Applications/Julia-0.5.app/Contents/Resources/julia/local/share/julia/site/v0.5", "/Applications/Julia-0.5.app/Contents/Resources/julia/share/julia/site/v0.5"]
-Julia << 'Libdl.DL_LOAD_PATH'
-## required for RDatasets because libz.dylib not found for MacOSX
-Julia << 'push!(Libdl.DL_LOAD_PATH,"/usr/lib");push!(Libdl.DL_LOAD_PATH,"/usr/local/lib")'
+Julia << 'LOAD_PATH'
 ```
 
 ## Example
+
+Once you haved installed `RDatasets` package in `julia`.
+
 ```{.ruby execute="false"}
 require 'jl4rb'
-# Julia.init since automatically called once
-Julia << 'using RDatasets' # A bit slow, julia and RDatasets initializations
+Julia << 'using RDatasets'  
 
 # A multilines call
 a=Julia << <<JLEND
@@ -48,9 +38,3 @@ p a
 # another call
 Julia << 'map(string,names(iris))'
 ```
-
-## Remark
-
-Maybe, this (or something similar) needs to be added in your .bash_profile for Mac users:
-
-	export DYLD_FALLBACK_LIBRARY_PATH=$JULIA_DIR/lib/julia:/usr/lib
