@@ -15,19 +15,21 @@ end
 def jl4rb_makefile(incs,libs)
 
     jl_share=`julia -e 'print(joinpath(Sys.BINDIR, Base.DATAROOTDIR, "julia"))'`
-    $CFLAGS     =`julia #{jl_share}/julia-config.jl --cflags`.strip
+    $CFLAGS     =`julia #{jl_share}/julia-config.jl --cflags`.strip + (RUBY_VERSION.split(".")[0] > "2" ? " -fdeclspec" : "")
     $LDFLAGS    =`julia #{jl_share}/julia-config.jl --ldflags`.strip
-    $libs    =`julia #{jl_share}/julia-config.jl --ldlibs`.strip
+    $LIBS    = `julia #{jl_share}/julia-config.jl --ldlibs`.strip
 
+    puts [$CFLAGS, $LDFLAGS, $LIBS]
 
     header = nil
 
-    rb4r_name="jl4rb"
-    $objs = [rb4r_name+".o"]
+    jl4r_name="jl4rb"
+    $objs = [jl4r_name+".o"]
 
-    dir_config("R4rb")
-    p ( {:CFLAGS => $CFLAGS, :LDFLAGS => $LDFLAGS, :libs => $libs })
-    create_makefile(rb4r_name)
+    dir_config("jl4rb")
+    # 
+    p ( {:CFLAGS => $CFLAGS, :LDFLAGS => $LDFLAGS, :LIBS => $LIBS })
+    create_makefile(jl4r_name)
 end
-
+#p [$prefix_include,$prefix_lib]
 jl4rb_makefile($prefix_include,$prefix_lib)

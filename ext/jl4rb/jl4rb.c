@@ -4,7 +4,6 @@
 
 **********************************************************************/
 
-#include "julia.h"
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
@@ -17,23 +16,28 @@
 //#endif
 
 //-| next macros already exist in ruby and are undefined here
-//#undef T_FLOAT
 #undef NORETURN
 #include "ruby.h"
 #include "ruby/version.h"
+#undef T_FLOAT
+#undef NOINLINE
+#include "julia.h"
 
 #define length(a) jl_array_size(a,0)
 
 /************* INIT *********************/
 
 
-VALUE Julia_init()
+VALUE Julia_init(VALUE obj)
 {
-  jl_init();
+  //jl_init();
+  printf("%s %s\n", jl_get_libdir(), jl_get_default_sysimg_path());
+  jl_init(); //_with_image("/Applications/Julia-1.6.app/Contents/Resources/julia/bin", "../lib/sys.dylib");
+  printf("ok\n");
   return Qtrue;
 }
 
-VALUE Julia_exit(VALUE exitcode) {
+VALUE Julia_exit(VALUE obj, VALUE exitcode) {
   jl_atexit_hook(exitcode);
   return Qtrue;
 }
@@ -506,7 +510,7 @@ Init_jl4rb()
   mJulia = rb_define_module("Julia");
 
   rb_define_module_function(mJulia, "initJL", Julia_init, 0);
-
+ 
   rb_define_module_function(mJulia, "exitJL", Julia_exit, 1);
 
   rb_define_module_function(mJulia, "evalLine", Julia_eval, 2);

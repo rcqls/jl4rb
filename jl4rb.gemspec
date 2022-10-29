@@ -2,7 +2,7 @@ require 'rubygems'
 require 'rubygems/package_task'
 
 PKG_NAME='jl4rb'
-PKG_VERSION='0.2.3'
+PKG_VERSION='0.2.6'
 PKG_FILES=FileList[
     'Rakefile','jl4rb.gemspec',
     'ext/jl4rb/*.c',
@@ -29,5 +29,4 @@ EOF
   s.author = "CQLS"
   s.email= "rdrouilh@gmail.com"
   s.homepage = "http://cqls.upmf-grenoble.fr"
-  s.rubyforge_project = nil
 end
