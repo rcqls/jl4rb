@@ -62,8 +62,8 @@ end
 ## clean task
 desc "Remove #{File.join(PKGDIR,PKG_NAME+'-'+PKG_VERSION+'.gem')}"
 task :clean do |t|
-  rm File.join(PKGDIR,PKG_NAME+'-'+PKG_VERSION+'.gem') if File.exists? File.join(PKGDIR,PKG_NAME+'-'+PKG_VERSION+'.gem')
-  rm_rf File.join(PKGDIR,PKG_NAME+'-'+PKG_VERSION) if File.exists? File.join(PKGDIR,PKG_NAME+'-'+PKG_VERSION)
+  rm File.join(PKGDIR,PKG_NAME+'-'+PKG_VERSION+'.gem') if File.exist? File.join(PKGDIR,PKG_NAME+'-'+PKG_VERSION+'.gem')
+  rm_rf File.join(PKGDIR,PKG_NAME+'-'+PKG_VERSION) if File.exist? File.join(PKGDIR,PKG_NAME+'-'+PKG_VERSION)
 end
 
 
@@ -77,13 +77,13 @@ end
 desc "Quick install #{File.join(PKGDIR,PKG_NAME+'-'+PKG_VERSION+'.gem')}"
 task :install do |t|
   `gem install #{File.join(PKGDIR,PKG_NAME+'-'+PKG_VERSION+'.gem')} --local --no-rdoc --no-ri`
-  rm_rf File.join(PKGDIR,PKG_NAME+'-'+PKG_VERSION) if File.exists? File.join(PKGDIR,PKG_NAME+'-'+PKG_VERSION)
+  rm_rf File.join(PKGDIR,PKG_NAME+'-'+PKG_VERSION) if File.exist? File.join(PKGDIR,PKG_NAME+'-'+PKG_VERSION)
 end
 
 desc "Docker install #{File.join(PKGDIR,PKG_NAME+'-'+PKG_VERSION+'.gem')}"
 task :docker => :package do |t|
   `gem install #{File.join(PKGDIR,PKG_NAME+'-'+PKG_VERSION+'.gem')} --local --no-rdoc --no-ri`
-  rm_rf File.join(PKGDIR,PKG_NAME+'-'+PKG_VERSION) if File.exists? File.join(PKGDIR,PKG_NAME+'-'+PKG_VERSION)
+  rm_rf File.join(PKGDIR,PKG_NAME+'-'+PKG_VERSION) if File.exist? File.join(PKGDIR,PKG_NAME+'-'+PKG_VERSION)
 end
 
 

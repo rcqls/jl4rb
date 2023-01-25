@@ -5,11 +5,11 @@ $prefix_include,$prefix_lib=[],[]
 $prefix= File.dirname(`julia -e 'print(Sys.BINDIR)'`)
 
 [$prefix+"/include/julia",$prefix+"/usr/include",$prefix+"/src",$prefix+"/src/support"].each do |incl|
-    $prefix_include << incl if File.exists? incl
+    $prefix_include << incl if File.exist? incl
 end
 
 ([$prefix+"/lib/julia",$prefix+"/usr/lib",$prefix+"/lib"]+(RUBY_PLATFORM=~/(?:mingw|msys)/ ? [$prefix+"/bin"] : [])).each do |lib|
-    $prefix_lib << lib if File.exists? lib
+    $prefix_lib << lib if File.exist? lib
 end
 
 def jl4rb_makefile(incs,libs)

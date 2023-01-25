@@ -1,5 +1,5 @@
-require 'jl4rb.bundle' if File.exists? File.join(File.dirname(__FILE__),'jl4rb.bundle') 
-require 'jl4rb.so' if File.exists? File.join(File.dirname(__FILE__),'jl4rb.so')
+require 'jl4rb.bundle' if File.exist? File.join(File.dirname(__FILE__),'jl4rb.bundle') 
+require 'jl4rb.so' if File.exist? File.join(File.dirname(__FILE__),'jl4rb.so')
 
 p [:dl, "jl4rb.DLL loaded" ]
 # loading ruby files
