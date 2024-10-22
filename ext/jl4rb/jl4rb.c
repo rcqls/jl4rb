@@ -23,7 +23,7 @@
 #undef NOINLINE
 #include "julia.h"
 
-#define length(a) jl_array_size(a,0)
+#define length(a) jl_array_dim(a,0)
 
 /************* INIT *********************/
 
@@ -42,13 +42,29 @@ VALUE Julia_exit(VALUE obj, VALUE exitcode) {
   return Qtrue;
 }
 
+// int Rulia_subtype(jl_value_t *jlv, char* typ) {
+//   jl_value_t *jl_typ=NULL;
+//   int res;
+
+//   JL_GC_PUSH1(&jl_typ);
+//   jl_typ = jl_eval_string(typ);
+//   res = jl_subtype(jlv,jl_typ);
+//   JL_GC_POP();
+//   return res;
+// }
+
 //Maybe try to use cpp stuff to get the output inside julia system (ccall,cgen and cgutils)
 //-| TODO: after adding in the jlapi.c jl_is_<C_type> functions replace the strcmp!
 VALUE jl_value_to_VALUE(jl_value_t *res) {
   size_t i=0,k,nd,d;
   VALUE resRb;
-  jl_value_t *tmp;
-  jl_function_t *call;
+  jl_value_t *tmp, *res_elt;
+  jl_function_t *call, *getindex;
+  // double* xDataD;
+  // int* xDataL;
+  // uint8_t* xDataB;
+  // jl_value_t** xData;
+
 
   if(res!=NULL) { //=> get a result
     //printf("typeof=%s\n",jl_typeof_str(res));
@@ -117,14 +133,17 @@ VALUE jl_value_to_VALUE(jl_value_t *res) {
     if(strcmp(jl_typeof_str(res),"Array")==0 )
     //if(jl_is_array(res))
     {
+      getindex = jl_get_function(jl_main_module, "getindex");
       nd = jl_array_rank(res);
       //printf("array_ndims=%d\n",(int)nd);
       if(nd==1) {//Vector
-        d = jl_array_size(res, 0);
+        d = jl_array_dim(res, 0);
         //printf("array_dim[1]=%d\n",(int)d);
         resRb = rb_ary_new2(d);
         for(i=0;i<d;i++) {
-          rb_ary_store(resRb,i,jl_value_to_VALUE(jl_arrayref((jl_array_t *)res,i)));
+          res_elt = jl_call2(getindex, res, jl_box_long(i+1));
+          rb_ary_store(resRb,i,jl_value_to_VALUE(res_elt));
+          // rb_ary_store(resRb,i,jl_value_to_VALUE(jl_arrayref((jl_array_t *)res,i)));
         }
         return resRb;
       }
@@ -285,6 +304,7 @@ jl_value_t* util_VALUE_to_jl_value(VALUE arr)
   jl_value_t *ans,*elt,*array_type;
   VALUE res,class,tmp;
   int i,n=0,vect=1;
+  jl_function_t *setindex;
 
   if(!rb_obj_is_kind_of(arr,rb_cArray)) {
     n=1;
@@ -297,14 +317,15 @@ jl_value_t* util_VALUE_to_jl_value(VALUE arr)
   }
 
   class=rb_class_of(rb_ary_entry(arr,0));
-  
+  setindex = jl_get_function(jl_main_module, "setindex!");
   if(class==rb_cFloat) {
     //-| This is maybe faster and can be developped in julia-api as jl_vector_float64(n) for example.
     array_type=jl_apply_array_type((jl_value_t*)jl_float64_type, 1);
     ans=(jl_value_t*)jl_alloc_array_1d(array_type,n);
     for(i=0;i<n;i++) {
       elt=jl_box_float64(NUM2DBL(rb_ary_entry(arr,i)));
-      jl_arrayset((jl_array_t*)ans,elt,i);
+      jl_call3(setindex, ans, elt, jl_box_long(i+1));
+      //jl_arrayset((jl_array_t*)ans,elt,i);
     }
 #if RUBY_API_VERSION_CODE >= 20400
   } else if(class==rb_cInteger) {
@@ -315,14 +336,16 @@ jl_value_t* util_VALUE_to_jl_value(VALUE arr)
     ans=(jl_value_t*)jl_alloc_array_1d(array_type,n);
     for(i=0;i<n;i++) {
       elt=jl_box_long(NUM2INT(rb_ary_entry(arr,i)));
-      jl_arrayset((jl_array_t*)ans,elt,i);
+      jl_call3(setindex, ans, elt, jl_box_long(i+1));
+      //jl_arrayset((jl_array_t*)ans,elt,i);
     }
   } else if(class==rb_cTrueClass || class==rb_cFalseClass) {
     array_type=jl_apply_array_type((jl_value_t*)jl_bool_type, 1);
     ans=(jl_value_t*)jl_alloc_array_1d(array_type,n);
     for(i=0;i<n;i++) {
       elt=jl_box_bool(rb_class_of(rb_ary_entry(arr,i))==rb_cFalseClass ? 0 : 1);
-      jl_arrayset((jl_array_t*)ans,elt,i);
+      jl_call3(setindex, ans, elt, jl_box_long(i+1));
+      //jl_arrayset((jl_array_t*)ans,elt,i);
     }
   } else if(class==rb_cString) {
     array_type=jl_apply_array_type((jl_value_t*)jl_string_type, 1);
@@ -330,10 +353,11 @@ jl_value_t* util_VALUE_to_jl_value(VALUE arr)
     for(i=0;i<n;i++) {
       tmp=rb_ary_entry(arr,i);
       elt=jl_cstr_to_string(StringValuePtr(tmp));
-      jl_arrayset((jl_array_t*)ans,elt,i);
+      jl_call3(setindex, ans, elt, jl_box_long(i+1));
+      //jl_arrayset((jl_array_t*)ans,elt,i);
     }
   } else ans=NULL;
-  if(!vect && ans) ans=jl_arrayref((jl_array_t*)ans,0);
+  if(!vect && ans) ans=NULL;//jl_arrayref((jl_array_t*)ans,0);
   return ans;
 }
 
